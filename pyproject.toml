@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "j63"
+version = "0.1.0"
+description = ""
+authors = ["Jennifer Wilcox <jennifer@nitori.org>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+black = "^25.1.0"
+vsg = "^3.30.0"
+ruff = "^0.9.9"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tools.ruff.lint]
+extend-select = ["E", "F", "I", "N", "PL"]
