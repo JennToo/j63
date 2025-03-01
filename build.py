@@ -27,6 +27,9 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.sdc",
     "hw/quartus/j63_toplevel.vhd",
 ]
+VHDL_SOURCES = [
+    "hw/quartus/j63_toplevel.vhd",
+]
 
 
 def main():
@@ -79,8 +82,12 @@ def build_task_graph():
         builders[name] = builder
         dependencies[name] = deps
 
-    rule("all", nop, ["black-check", "ruff-check", "build/j63_quartus/meta-built"])
-    rule("format", nop, ["black-fix", "ruff-fix"])
+    rule(
+        "all",
+        nop,
+        ["vsg-check", "black-check", "ruff-check", "build/j63_quartus/meta-built"],
+    )
+    rule("format", nop, ["vsg-fix", "black-fix", "ruff-fix"])
     rule(
         "black-check",
         lambda dependencies, **kwargs: run(["black", "--check"] + dependencies),
@@ -92,6 +99,11 @@ def build_task_graph():
         PYTHON_SOURCES,
     )
     rule(
+        "vsg-check",
+        lambda dependencies, **kwargs: run(["vsg"] + dependencies),
+        VHDL_SOURCES,
+    )
+    rule(
         "black-fix",
         lambda dependencies, **kwargs: run(["black"] + dependencies),
         PYTHON_SOURCES,
@@ -100,6 +112,11 @@ def build_task_graph():
         "ruff-fix",
         lambda dependencies, **kwargs: run(["ruff", "check", "--fix"] + dependencies),
         PYTHON_SOURCES,
+    )
+    rule(
+        "vsg-fix",
+        lambda dependencies, **kwargs: run(["vsg", "--fix"] + dependencies),
+        VHDL_SOURCES,
     )
     rule(
         "build/j63_quartus/meta-built",

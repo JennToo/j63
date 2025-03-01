@@ -1,163 +1,166 @@
 library ieee;
-use ieee.std_logic_1164.all;
+  use ieee.std_logic_1164.all;
 
 entity j63_toplevel is
-    port (
-        CLOCK_50   : in  std_logic;
-        CLOCK2_50  : in  std_logic;
-        CLOCK3_50  : in  std_logic;
-        SMA_CLKIN  : in  std_logic;
-        SMA_CLKOUT : out std_logic;
+  port (
+    clock_50   : in    std_logic;
+    clock2_50  : in    std_logic;
+    clock3_50  : in    std_logic;
+    sma_clkin  : in    std_logic;
+    sma_clkout : out   std_logic;
 
-        KEY   : in    std_logic_vector(3 downto 0);
-        SW    : in    std_logic_vector(17 downto 0);
-        LEDG  : out   std_logic_vector(8  downto 0);
-        LEDR  : out   std_logic_vector(17 downto 0);
-        HEX0  : out   std_logic_vector(6 downto 0);
-        HEX1  : out   std_logic_vector(6 downto 0);
-        HEX2  : out   std_logic_vector(6 downto 0);
-        HEX3  : out   std_logic_vector(6 downto 0);
-        HEX4  : out   std_logic_vector(6 downto 0);
-        HEX5  : out   std_logic_vector(6 downto 0);
-        HEX6  : out   std_logic_vector(6 downto 0);
-        HEX7  : out   std_logic_vector(6 downto 0);
+    key  : in    std_logic_vector(3 downto 0);
+    sw   : in    std_logic_vector(17 downto 0);
+    ledg : out   std_logic_vector(8  downto 0);
+    ledr : out   std_logic_vector(17 downto 0);
+    hex0 : out   std_logic_vector(6 downto 0);
+    hex1 : out   std_logic_vector(6 downto 0);
+    hex2 : out   std_logic_vector(6 downto 0);
+    hex3 : out   std_logic_vector(6 downto 0);
+    hex4 : out   std_logic_vector(6 downto 0);
+    hex5 : out   std_logic_vector(6 downto 0);
+    hex6 : out   std_logic_vector(6 downto 0);
+    hex7 : out   std_logic_vector(6 downto 0);
 
-        EX_IO : inout std_logic_vector(6 downto 0);
+    ex_io : inout std_logic_vector(6 downto 0);
 
-        LCD_BLON : out   std_logic;
-        LCD_DATA : inout std_logic_vector(7 downto 0);
-        LCD_EN   : out   std_logic;
-        LCD_ON   : out   std_logic;
-        LCD_RS   : out   std_logic;
-        LCD_RW   : out   std_logic;
+    lcd_blon : out   std_logic;
+    lcd_data : inout std_logic_vector(7 downto 0);
+    lcd_en   : out   std_logic;
+    lcd_on   : out   std_logic;
+    lcd_rs   : out   std_logic;
+    lcd_rw   : out   std_logic;
 
-        UART_CTS : in  std_logic;
-        UART_RTS : out std_logic;
-        UART_RXD : in  std_logic;
-        UART_TXD : out std_logic;
+    uart_cts : in    std_logic;
+    uart_rts : out   std_logic;
+    uart_rxd : in    std_logic;
+    uart_txd : out   std_logic;
 
-        PS2_CLK  : inout std_logic;
-        PS2_CLK2 : inout std_logic;
-        PS2_DAT  : inout std_logic;
-        PS2_DAT2 : inout std_logic;
+    ps2_clk  : inout std_logic;
+    ps2_clk2 : inout std_logic;
+    ps2_dat  : inout std_logic;
+    ps2_dat2 : inout std_logic;
 
-        SD_CLK  : out   std_logic;
-        SD_CMD  : inout std_logic;
-        SD_DAT  : inout std_logic_vector(3 downto 0);
-        SD_WP_N : in    std_logic;
+    sd_clk  : out   std_logic;
+    sd_cmd  : inout std_logic;
+    sd_dat  : inout std_logic_vector(3 downto 0);
+    sd_wp_n : in    std_logic;
 
-        VGA_CLK     : out std_logic;
-        VGA_HS      : out std_logic;
-        VGA_VS      : out std_logic;
-        VGA_BLANK_N : out std_logic;
-        VGA_SYNC_N  : out std_logic;
-        VGA_R       : out std_logic_vector(7 downto 0);
-        VGA_G       : out std_logic_vector(7 downto 0);
-        VGA_B       : out std_logic_vector(7 downto 0);
+    vga_clk     : out   std_logic;
+    vga_hs      : out   std_logic;
+    vga_vs      : out   std_logic;
+    vga_blank_n : out   std_logic;
+    vga_sync_n  : out   std_logic;
+    vga_r       : out   std_logic_vector(7 downto 0);
+    vga_g       : out   std_logic_vector(7 downto 0);
+    vga_b       : out   std_logic_vector(7 downto 0);
 
-        AUD_ADCDAT  : in    std_logic;
-        AUD_ADCLRCK : inout std_logic;
-        AUD_BCLK    : inout std_logic;
-        AUD_DACDAT  : out   std_logic;
-        AUD_DACLRCK : inout std_logic;
-        AUD_XCK     : out   std_logic;
+    aud_adcdat  : in    std_logic;
+    aud_adclrck : inout std_logic;
+    aud_bclk    : inout std_logic;
+    aud_dacdat  : out   std_logic;
+    aud_daclrck : inout std_logic;
+    aud_xck     : out   std_logic;
 
-        EEP_I2C_SCLK : out   std_logic;
-        EEP_I2C_SDAT : inout std_logic;
+    eep_i2c_sclk : out   std_logic;
+    eep_i2c_sdat : inout std_logic;
 
-        I2C_SCLK : out   std_logic;
-        I2C_SDAT : inout std_logic;
+    i2c_sclk : out   std_logic;
+    i2c_sdat : inout std_logic;
 
-        ENET0_GTX_CLK : out   std_logic;
-        ENET0_INT_N   : in    std_logic;
-        ENET0_LINK100 : in    std_logic;
-        ENET0_MDC     : out   std_logic;
-        ENET0_MDIO    : inout std_logic;
-        ENET0_RST_N   : out   std_logic;
-        ENET0_RX_CLK  : in    std_logic;
-        ENET0_RX_COL  : in    std_logic;
-        ENET0_RX_CRS  : in    std_logic;
-        ENET0_RX_DATA : in    std_logic_vector(3 downto 0);
-        ENET0_RX_DV   : in    std_logic;
-        ENET0_RX_ER   : in    std_logic;
-        ENET0_TX_CLK  : in    std_logic;
-        ENET0_TX_DATA : out   std_logic_vector(3 downto 0);
-        ENET0_TX_EN   : out   std_logic;
-        ENET0_TX_ER   : out   std_logic;
-        ENETCLK_25    : in    std_logic;
+    enet0_gtx_clk : out   std_logic;
+    enet0_int_n   : in    std_logic;
+    enet0_link100 : in    std_logic;
+    enet0_mdc     : out   std_logic;
+    enet0_mdio    : inout std_logic;
+    enet0_rst_n   : out   std_logic;
+    enet0_rx_clk  : in    std_logic;
+    enet0_rx_col  : in    std_logic;
+    enet0_rx_crs  : in    std_logic;
+    enet0_rx_data : in    std_logic_vector(3 downto 0);
+    enet0_rx_dv   : in    std_logic;
+    enet0_rx_er   : in    std_logic;
+    enet0_tx_clk  : in    std_logic;
+    enet0_tx_data : out   std_logic_vector(3 downto 0);
+    enet0_tx_en   : out   std_logic;
+    enet0_tx_er   : out   std_logic;
+    enetclk_25    : in    std_logic;
 
-        ENET1_GTX_CLK : out   std_logic;
-        ENET1_INT_N   : in    std_logic;
-        ENET1_LINK100 : in    std_logic;
-        ENET1_MDC     : out   std_logic;
-        ENET1_MDIO    : inout std_logic;
-        ENET1_RST_N   : out   std_logic;
-        ENET1_RX_CLK  : in    std_logic;
-        ENET1_RX_COL  : in    std_logic;
-        ENET1_RX_CRS  : in    std_logic;
-        ENET1_RX_DATA : in    std_logic_vector(3 downto 0);
-        ENET1_RX_DV   : in    std_logic;
-        ENET1_RX_ER   : in    std_logic;
-        ENET1_TX_CLK  : in    std_logic;
-        ENET1_TX_DATA : out   std_logic_vector(3 downto 0);
-        ENET1_TX_EN   : out   std_logic;
-        ENET1_TX_ER   : out   std_logic;
+    enet1_gtx_clk : out   std_logic;
+    enet1_int_n   : in    std_logic;
+    enet1_link100 : in    std_logic;
+    enet1_mdc     : out   std_logic;
+    enet1_mdio    : inout std_logic;
+    enet1_rst_n   : out   std_logic;
+    enet1_rx_clk  : in    std_logic;
+    enet1_rx_col  : in    std_logic;
+    enet1_rx_crs  : in    std_logic;
+    enet1_rx_data : in    std_logic_vector(3 downto 0);
+    enet1_rx_dv   : in    std_logic;
+    enet1_rx_er   : in    std_logic;
+    enet1_tx_clk  : in    std_logic;
+    enet1_tx_data : out   std_logic_vector(3 downto 0);
+    enet1_tx_en   : out   std_logic;
+    enet1_tx_er   : out   std_logic;
 
-        TD_CLK27   : in  std_logic;
-        TD_DATA    : in  std_logic_vector(7 downto 0);
-        TD_HS      : in  std_logic;
-        TD_RESET_N : out std_logic;
-        TD_VS      : in  std_logic;
+    td_clk27   : in    std_logic;
+    td_data    : in    std_logic_vector(7 downto 0);
+    td_hs      : in    std_logic;
+    td_reset_n : out   std_logic;
+    td_vs      : in    std_logic;
 
-        OTG_ADDR  : out   std_logic_vector(1 downto 0);
-        OTG_CS_N  : out   std_logic;
-        OTG_DATA  : inout std_logic_vector(15 downto 0);
-        OTG_INT   : in    std_logic;
-        OTG_RD_N  : out   std_logic;
-        OTG_RST_N : out   std_logic;
-        OTG_WE_N  : out   std_logic;
+    otg_addr  : out   std_logic_vector(1 downto 0);
+    otg_cs_n  : out   std_logic;
+    otg_data  : inout std_logic_vector(15 downto 0);
+    otg_int   : in    std_logic;
+    otg_rd_n  : out   std_logic;
+    otg_rst_n : out   std_logic;
+    otg_we_n  : out   std_logic;
 
-        IRDA_RXD : in std_logic;
+    irda_rxd : in    std_logic;
 
-        DRAM_ADDR  : out   std_logic_vector(12 downto 0);
-        DRAM_BA    : out   std_logic_vector(1 downto 0);
-        DRAM_CAS_N : out   std_logic;
-        DRAM_CKE   : out   std_logic;
-        DRAM_CLK   : out   std_logic;
-        DRAM_CS_N  : out   std_logic;
-        DRAM_DQ    : inout std_logic_vector(31 downto 0);
-        DRAM_DQM   : out   std_logic_vector(3 downto 0);
-        DRAM_RAS_N : out   std_logic;
-        DRAM_WE_N  : out   std_logic;
+    dram_addr  : out   std_logic_vector(12 downto 0);
+    dram_ba    : out   std_logic_vector(1 downto 0);
+    dram_cas_n : out   std_logic;
+    dram_cke   : out   std_logic;
+    dram_clk   : out   std_logic;
+    dram_cs_n  : out   std_logic;
+    dram_dq    : inout std_logic_vector(31 downto 0);
+    dram_dqm   : out   std_logic_vector(3 downto 0);
+    dram_ras_n : out   std_logic;
+    dram_we_n  : out   std_logic;
 
-        SRAM_ADDR : out   std_logic_vector(19 downto 0);
-        SRAM_CE_N : out   std_logic;
-        SRAM_DQ   : inout std_logic_vector(15 downto 0);
-        SRAM_LB_N : out   std_logic;
-        SRAM_OE_N : out   std_logic;
-        SRAM_UB_N : out   std_logic;
-        SRAM_WE_N : out   std_logic;
+    sram_addr : out   std_logic_vector(19 downto 0);
+    sram_ce_n : out   std_logic;
+    sram_dq   : inout std_logic_vector(15 downto 0);
+    sram_lb_n : out   std_logic;
+    sram_oe_n : out   std_logic;
+    sram_ub_n : out   std_logic;
+    sram_we_n : out   std_logic;
 
-        FL_ADDR  : out   std_logic_vector(22 downto 0);
-        FL_CE_N  : out   std_logic;
-        FL_DQ    : inout std_logic_vector(7 downto 0);
-        FL_OE_N  : out   std_logic;
-        FL_RST_N : out   std_logic;
-        FL_RY    : in    std_logic;
-        FL_WE_N  : out   std_logic;
-        FL_WP_N  : out   std_logic
-    );
+    fl_addr  : out   std_logic_vector(22 downto 0);
+    fl_ce_n  : out   std_logic;
+    fl_dq    : inout std_logic_vector(7 downto 0);
+    fl_oe_n  : out   std_logic;
+    fl_rst_n : out   std_logic;
+    fl_ry    : in    std_logic;
+    fl_we_n  : out   std_logic;
+    fl_wp_n  : out   std_logic
+  );
 end entity j63_toplevel;
 
 architecture rtl of j63_toplevel is
+
 begin
-    LEDG <= "010101100";
-    HEX0 <= (others => '1');
-    HEX1 <= (others => '1');
-    HEX2 <= (others => '1');
-    HEX3 <= (others => '1');
-    HEX4 <= (others => '1');
-    HEX5 <= (others => '1');
-    HEX6 <= (others => '1');
-    HEX7 <= (others => '1');
-end rtl;
+
+  ledg <= "010101100";
+  hex0 <= (others => '1');
+  hex1 <= (others => '1');
+  hex2 <= (others => '1');
+  hex3 <= (others => '1');
+  hex4 <= (others => '1');
+  hex5 <= (others => '1');
+  hex6 <= (others => '1');
+  hex7 <= (others => '1');
+
+end architecture rtl;
