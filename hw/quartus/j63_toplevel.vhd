@@ -151,7 +151,18 @@ end entity j63_toplevel;
 
 architecture rtl of j63_toplevel is
 
+  signal clk_sys : std_logic;
+  signal clk_vga : std_logic;
+
 begin
+
+  u_sys_pll : entity work.sys_pll
+    port map (
+      inclk0 => clock_50,
+      c0     => clk_vga,
+      c1     => clk_sys,
+      locked => open
+    );
 
   ledg <= "010101100";
   hex0 <= (others => '1');

@@ -26,6 +26,7 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.qsf",
     "hw/quartus/j63.sdc",
     "hw/quartus/j63_toplevel.vhd",
+    "hw/quartus/sys_pll.qip",
 ]
 VHDL_SOURCES = [
     "hw/quartus/j63_toplevel.vhd",
@@ -100,7 +101,9 @@ def build_task_graph():
     )
     rule(
         "vsg-check",
-        lambda dependencies, **kwargs: run(["vsg"] + dependencies),
+        lambda dependencies, **kwargs: run(
+            ["vsg", "-c", "vsg.yaml", "--"] + dependencies
+        ),
         VHDL_SOURCES,
     )
     rule(
@@ -115,7 +118,9 @@ def build_task_graph():
     )
     rule(
         "vsg-fix",
-        lambda dependencies, **kwargs: run(["vsg", "--fix"] + dependencies),
+        lambda dependencies, **kwargs: run(
+            ["vsg", "-c", "vsg.yaml", "--fix"] + dependencies
+        ),
         VHDL_SOURCES,
     )
     rule(
@@ -124,6 +129,14 @@ def build_task_graph():
         QUARTUS_PROJECT_FILES + ["build/j63_quartus"],
     )
     rule("build/j63_quartus", mkdir, [])
+    rule(
+        "quartus-j63",
+        lambda **kwargs: run(
+            [f"{os.environ["QUARTUS_ROOTDIR"]}/quartus", "j63"],
+            cwd="build/j63_quartus",
+        ),
+        ["build/j63_quartus/meta-built"],
+    )
 
     for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES:
         rule(source, file_exists, [])
@@ -181,7 +194,7 @@ def build_quartus_project(task, dependencies, **kwargs):
     qpf_file = None
     src_files = []
     for dep in dependencies:
-        if dep.endswith(".vhd") or dep.endswith(".sdc"):
+        if dep.endswith(".vhd") or dep.endswith(".sdc") or dep.endswith(".qip"):
             src_files.append(pathlib.Path(dep))
         elif dep.endswith(".qsf"):
             qsf_file = pathlib.Path(dep)
@@ -194,6 +207,8 @@ def build_quartus_project(task, dependencies, **kwargs):
             type_ = "VHDL_FILE"
         elif src_file.suffix == ".sdc":
             type_ = "SDC_FILE"
+        elif src_file.suffix == ".qip":
+            type_ = "QIP_FILE"
         else:
             fatal(f"Unknown src file type {src_file}")
         qsf_contents += f"set_global_assignment -name {type_} {src_file.absolute()}\n"
