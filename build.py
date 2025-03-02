@@ -29,12 +29,22 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/sys_pll.qip",
 ]
 VHDL_SOURCES = [
-    "hw/quartus/j63_toplevel.vhd",
     "hw/common/math_pkg.vhd",
     "hw/gpu/gpu_pkg.vhd",
     "hw/gpu/vga.vhd",
+    "hw/gpu/tb_vga.vhd",
     "hw/gpu/gpu.vhd",
+    "hw/quartus/sys_pll.vhd",
+    "hw/quartus/j63_toplevel.vhd",
 ]
+VSG_EXCLUDED = [
+    "hw/quartus/sys_pll.vhd",
+]
+VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
+QUARTUS_EXCLUDED = [
+    "hw/gpu/tb_vga.vhd",
+]
+QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
 
 
 def main():
@@ -90,26 +100,18 @@ def build_task_graph():
     rule(
         "all",
         nop,
-        ["vsg-check", "black-check", "ruff-check", "build/j63_quartus/meta-built"],
+        [
+            "build/meta-vsg-check",
+            "build/meta-black-check",
+            "build/meta-ruff-check",
+            "build/j63_quartus/meta-built",
+            "build/j63_nvc/meta-run",
+        ],
     )
     rule("format", nop, ["vsg-fix", "black-fix", "ruff-fix"])
-    rule(
-        "black-check",
-        lambda dependencies, **kwargs: run(["black", "--check"] + dependencies),
-        PYTHON_SOURCES,
-    )
-    rule(
-        "ruff-check",
-        lambda dependencies, **kwargs: run(["ruff", "check"] + dependencies),
-        PYTHON_SOURCES,
-    )
-    rule(
-        "vsg-check",
-        lambda dependencies, **kwargs: run(
-            ["vsg", "-c", "vsg.yaml", "--"] + dependencies
-        ),
-        VHDL_SOURCES,
-    )
+    rule("build/meta-black-check", black_check, PYTHON_SOURCES)
+    rule("build/meta-ruff-check", ruff_check, PYTHON_SOURCES)
+    rule("build/meta-vsg-check", vsg_check, VSG_SOURCES)
     rule(
         "black-fix",
         lambda dependencies, **kwargs: run(["black"] + dependencies),
@@ -125,12 +127,12 @@ def build_task_graph():
         lambda dependencies, **kwargs: run(
             ["vsg", "-c", "vsg.yaml", "--fix"] + dependencies
         ),
-        VHDL_SOURCES,
+        VSG_SOURCES,
     )
     rule(
         "build/j63_quartus/meta-built",
         build_quartus_project,
-        QUARTUS_PROJECT_FILES + VHDL_SOURCES + ["build/j63_quartus"],
+        QUARTUS_PROJECT_FILES + QUARTUS_SOURCES + ["build/j63_quartus"],
     )
     rule("build/j63_quartus", mkdir, [])
     rule(
@@ -141,6 +143,21 @@ def build_task_graph():
         ),
         ["build/j63_quartus/meta-built"],
     )
+
+    rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
+    rule("build/j63_nvc/meta-analyzed", nvc_analyze, VHDL_SOURCES)
+    rule("build/j63_nvc", mkdir, [])
+    rule(
+        "build/j63_nvc/meta-elab-tb_vga",
+        lambda **kwargs: nvc_elaborate(toplevel="tb_vga", **kwargs),
+        ["build/j63_nvc/meta-analyzed"],
+    )
+    rule(
+        "build/j63_nvc/meta-run-tb_vga",
+        lambda **kwargs: nvc_run(toplevel="tb_vga", **kwargs),
+        ["build/j63_nvc/meta-elab-tb_vga"],
+    )
+    rule("build/j63_nvc/meta-run", nop, ["build/j63_nvc/meta-run-tb_vga"])
 
     for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES:
         rule(source, file_exists, [])
@@ -192,6 +209,21 @@ def nop(**kwargs):
     return
 
 
+def black_check(task, dependencies, **kwargs):
+    run(["black", "--check"] + dependencies)
+    touch(task)
+
+
+def ruff_check(task, dependencies, **kwargs):
+    run(["ruff", "check"] + dependencies)
+    touch(task)
+
+
+def vsg_check(task, dependencies, **kwargs):
+    run(["vsg", "-c", "vsg.yaml", "--"] + dependencies)
+    touch(task)
+
+
 def build_quartus_project(task, dependencies, **kwargs):
     build_dir = pathlib.Path(task).parent
     qsf_file = None
@@ -223,10 +255,10 @@ def build_quartus_project(task, dependencies, **kwargs):
 
     quartus = os.environ["QUARTUS_ROOTDIR"]
     project = qsf_file.stem
-    run([f"{quartus}/quartus_sh", "--prepare", project], cwd=build_dir)
+    run([f"{quartus}/bin/quartus_sh", "--prepare", project], cwd=build_dir)
     run(
         [
-            f"{quartus}/quartus_map",
+            f"{quartus}/bin/quartus_map",
             "--read_settings_files=on",
             "--write_settings_files=off",
             project,
@@ -237,7 +269,7 @@ def build_quartus_project(task, dependencies, **kwargs):
     )
     run(
         [
-            f"{quartus}/quartus_fit",
+            f"{quartus}/bin/quartus_fit",
             "--read_settings_files=on",
             "--write_settings_files=off",
             project,
@@ -248,7 +280,7 @@ def build_quartus_project(task, dependencies, **kwargs):
     )
     run(
         [
-            f"{quartus}/quartus_asm",
+            f"{quartus}/bin/quartus_asm",
             "--read_settings_files=on",
             "--write_settings_files=off",
             project,
@@ -257,18 +289,73 @@ def build_quartus_project(task, dependencies, **kwargs):
         ],
         cwd=build_dir,
     )
-    run([f"{quartus}/quartus_sta", project, "-c", project], cwd=build_dir)
+    run([f"{quartus}/bin/quartus_sta", project, "-c", project], cwd=build_dir)
 
     touch(task)
 
 
+def nvc_quartus_install(task, **kwargs):
+    build_dir = pathlib.Path(task).parent
+
+    env = os.environ.copy()
+    env["NVC_INSTALL_DEST"] = str(build_dir.absolute())
+    run(["nvc", "--install", "quartus"], cwd=build_dir, env=env)
+
+    touch(task)
+
+
+def nvc_analyze(task, dependencies, **kwargs):
+    build_dir = pathlib.Path(task).parent
+    mkdir(build_dir)
+    run(
+        ["nvc", f"--work=j63:{build_dir}/j63", "-L", str(build_dir), "--std=2008", "-a"]
+        + dependencies
+    )
+    touch(task)
+
+
+def nvc_elaborate(toplevel, task, **kwargs):
+    build_dir = pathlib.Path(task).parent
+    run(
+        [
+            "nvc",
+            f"--work=j63:{build_dir}/j63",
+            "-L",
+            str(build_dir),
+            "--std=2008",
+            "-e",
+            toplevel,
+        ]
+    )
+    touch(task)
+
+
+def nvc_run(toplevel, task, **kwargs):
+    build_dir = pathlib.Path(task).parent
+    run(
+        [
+            "nvc",
+            f"--work=j63:{build_dir}/j63",
+            "-L",
+            str(build_dir),
+            "--std=2008",
+            "-r",
+            f"--wave={build_dir}/{toplevel}.fst",
+            f"--gtkw={build_dir}/{toplevel}.gtkw",
+            toplevel,
+        ]
+    )
+    touch(task)
+
+
 def touch(path):
+    mkdir(pathlib.Path(path).parent)
     pathlib.Path(path).write_text("")
 
 
-def run(cmd, cwd=None):
+def run(cmd, cwd=None, env=None):
     logging.info(" ".join(cmd))
-    result = subprocess.run(cmd, check=False, cwd=cwd)
+    result = subprocess.run(cmd, check=False, cwd=cwd, env=env)
     if result.returncode != 0:
         fatal("Command failed: " + " ".join(cmd), result.returncode)
 

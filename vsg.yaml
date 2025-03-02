@@ -1,3 +1,6 @@
 rule:
   instantiation_034:
     method: entity
+  # Default assignments are very useful in simulation
+  signal_007:
+    disable: true
