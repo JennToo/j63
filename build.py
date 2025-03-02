@@ -30,6 +30,10 @@ QUARTUS_PROJECT_FILES = [
 ]
 VHDL_SOURCES = [
     "hw/quartus/j63_toplevel.vhd",
+    "hw/common/math_pkg.vhd",
+    "hw/gpu/gpu_pkg.vhd",
+    "hw/gpu/vga.vhd",
+    "hw/gpu/gpu.vhd",
 ]
 
 
@@ -126,7 +130,7 @@ def build_task_graph():
     rule(
         "build/j63_quartus/meta-built",
         build_quartus_project,
-        QUARTUS_PROJECT_FILES + ["build/j63_quartus"],
+        QUARTUS_PROJECT_FILES + VHDL_SOURCES + ["build/j63_quartus"],
     )
     rule("build/j63_quartus", mkdir, [])
     rule(
@@ -138,7 +142,7 @@ def build_task_graph():
         ["build/j63_quartus/meta-built"],
     )
 
-    for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES:
+    for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES:
         rule(source, file_exists, [])
 
     return Tasks(dependencies=dependencies, builders=builders)

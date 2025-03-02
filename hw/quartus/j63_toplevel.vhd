@@ -151,8 +151,11 @@ end entity j63_toplevel;
 
 architecture rtl of j63_toplevel is
 
-  signal clk_sys : std_logic;
-  signal clk_vga : std_logic;
+  signal clk_sys  : std_logic;
+  signal clk_vga  : std_logic;
+  signal arst     : std_logic;
+  signal vga_hs_i : std_logic;
+  signal vga_vs_i : std_logic;
 
 begin
 
@@ -163,6 +166,30 @@ begin
       c1     => clk_sys,
       locked => open
     );
+
+  vga_clk <= clk_vga;
+  vga_hs  <= vga_hs_i when sw(17) else
+             '1';
+  vga_vs  <= vga_vs_i when sw(17) else
+             '1';
+
+  u_gpu : entity work.gpu
+    port map (
+      clk_sys => clk_sys,
+      clk_vga => clk_vga,
+      arst    => arst,
+
+      vga_hs      => vga_hs_i,
+      vga_vs      => vga_vs_i,
+      vga_blank_n => vga_blank_n,
+      vga_sync_n  => vga_sync_n,
+      vga_r       => vga_r,
+      vga_g       => vga_g,
+      vga_b       => vga_b
+    );
+
+  -- TODO: Create a reset generator for startup
+  arst <= '1';
 
   ledg <= "010101100";
   hex0 <= (others => '1');
