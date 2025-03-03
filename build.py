@@ -145,7 +145,11 @@ def build_task_graph():
     )
 
     rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
-    rule("build/j63_nvc/meta-analyzed", nvc_analyze, VHDL_SOURCES)
+    rule(
+        "build/j63_nvc/meta-analyzed",
+        nvc_analyze,
+        VHDL_SOURCES + ["build/j63_nvc/meta-quartus"],
+    )
     rule("build/j63_nvc", mkdir, [])
     rule(
         "build/j63_nvc/meta-elab-tb_vga",
@@ -309,7 +313,7 @@ def nvc_analyze(task, dependencies, **kwargs):
     mkdir(build_dir)
     run(
         ["nvc", f"--work=j63:{build_dir}/j63", "-L", str(build_dir), "--std=2008", "-a"]
-        + dependencies
+        + [x for x in dependencies if x.endswith(".vhd")]
     )
     touch(task)
 
