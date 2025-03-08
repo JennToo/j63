@@ -68,12 +68,9 @@ def main():
             if task not in tasks.builders:
                 fatal(f"No rule to make {task}")
             dependencies = tasks.dependencies[task]
-            if all(os.path.exists(x) for x in [task] + dependencies):
-                task_stat = os.stat(task)
-                dep_stats = [os.stat(x) for x in dependencies]
-                if all(task_stat.st_mtime >= dep.st_mtime for dep in dep_stats):
-                    logging.info(f"{task} up to date")
-                    return task
+            if task_up_to_date(task, dependencies):
+                logging.info(f"{task} up to date")
+                return task
             tasks.builders[task](task=task, dependencies=dependencies)
             return task
 
@@ -191,6 +188,15 @@ def filter_tasks(tasks, requested):
         },
         builders=tasks.builders,
     )
+
+
+def task_up_to_date(task, dependencies):
+    if all(os.path.exists(x) for x in [task] + dependencies):
+        task_stat = os.stat(task)
+        dep_stats = [os.stat(x) for x in dependencies if not os.path.isdir(x)]
+        if all(task_stat.st_mtime >= dep.st_mtime for dep in dep_stats):
+            return True
+    return False
 
 
 def parse_args():
