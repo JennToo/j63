@@ -10,6 +10,7 @@ python = "^3.12"
 black = "^25.1.0"
 vsg = { git = "https://github.com/jeremiah-c-leary/vhdl-style-guide.git" }
 ruff = "^0.9.9"
+tomli-w = "^1.2.0"
 
 [build-system]
 requires = ["poetry-core"]

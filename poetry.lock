@@ -208,6 +208,17 @@ files = [
 ]
 
 [[package]]
+name = "tomli-w"
+version = "1.2.0"
+description = "A lil' TOML writer"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "tomli_w-1.2.0-py3-none-any.whl", hash = "sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90"},
+    {file = "tomli_w-1.2.0.tar.gz", hash = "sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021"},
+]
+
+[[package]]
 name = "vsg"
 version = "3.30.0.post2+git.86d21756"
 description = "VHDL Style Guide"
@@ -233,4 +244,4 @@ resolved_reference = "399ef069896313ead5b0a48b3e94f456ae718a33"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "1b068a1835eac643f30fe1774422e34097307fe6a20e82c30be8a00f755a7303"
+content-hash = "f83f6701e373dc1636f7c84cceb3ca3c0a9a7a3b4d975f1a09700d5f7589df2e"

@@ -11,6 +11,8 @@ import shutil
 import subprocess
 import sys
 
+import tomli_w
+
 
 @dataclasses.dataclass
 class Tasks:
@@ -51,6 +53,8 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
     logging.info("Starting build")
     args = parse_args()
+
+    write_vhdl_ls()
 
     tasks = build_task_graph()
     if args.task:
@@ -197,6 +201,11 @@ def task_up_to_date(task, dependencies):
         if all(task_stat.st_mtime >= dep.st_mtime for dep in dep_stats):
             return True
     return False
+
+
+def write_vhdl_ls():
+    config = {"libraries": {"j63": {"files": sorted(VHDL_SOURCES)}}}
+    pathlib.Path("vhdl_ls.toml").write_text(tomli_w.dumps(config))
 
 
 def parse_args():
