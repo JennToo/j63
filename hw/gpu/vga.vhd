@@ -25,6 +25,8 @@ entity vga is
     clk  : in    std_logic;
     arst : in    std_logic;
 
+    sync_frame_start : in    std_logic;
+
     pixel_i : in    wide_pixel_t;
     pixel_o : out   wide_pixel_t;
 
@@ -78,14 +80,19 @@ begin
       htimer <= to_unsigned(0, htimer_width);
       vtimer <= to_unsigned(0, vtimer_width);
     elsif rising_edge(clk) then
-      if (htimer < hmax) then
-        htimer <= htimer + 1;
-      else
+      if (sync_frame_start = '1') then
         htimer <= to_unsigned(0, htimer_width);
-        if (vtimer < vmax) then
-          vtimer <= vtimer + 1;
+        vtimer <= to_unsigned(0, vtimer_width);
+      else
+        if (htimer < hmax - 1) then
+          htimer <= htimer + 1;
         else
-          vtimer <= to_unsigned(0, vtimer_width);
+          htimer <= to_unsigned(0, htimer_width);
+          if (vtimer < vmax - 1) then
+            vtimer <= vtimer + 1;
+          else
+            vtimer <= to_unsigned(0, vtimer_width);
+          end if;
         end if;
       end if;
     end if;

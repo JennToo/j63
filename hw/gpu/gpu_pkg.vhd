@@ -1,7 +1,17 @@
 library ieee;
   use ieee.std_logic_1164.all;
+  use work.math_pkg.all;
 
 package gpu_pkg is
+
+  constant vga_width       : natural := 640;
+  constant vga_height      : natural := 480;
+  constant vga_width_log2  : natural := clog2(vga_width);
+  constant vga_height_log2 : natural := clog2(vga_height);
+  constant fb_width        : natural := 320;
+  constant fb_height       : natural := 240;
+  constant fb_width_log2   : natural := clog2(fb_width);
+  constant fb_height_log2  : natural := clog2(fb_height);
 
   type pixel_t is record
     red   : std_logic_vector(4 downto 0);

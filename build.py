@@ -29,22 +29,28 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.sdc",
     "hw/quartus/j63_toplevel.vhd",
     "hw/quartus/sys_pll.qip",
+    "hw/quartus/vga_fb_fifo.qip",
 ]
 VHDL_SOURCES = [
     "hw/common/math_pkg.vhd",
+    "hw/common/test_pkg.vhd",
     "hw/gpu/gpu_pkg.vhd",
+    "hw/quartus/vga_fb_fifo.vhd",
     "hw/gpu/vga.vhd",
-    "hw/gpu/tb_vga.vhd",
+    "hw/gpu/sim_vga.vhd",
     "hw/gpu/gpu.vhd",
+    "hw/gpu/tb_gpu.vhd",
     "hw/quartus/sys_pll.vhd",
     "hw/quartus/j63_toplevel.vhd",
 ]
 VSG_EXCLUDED = [
     "hw/quartus/sys_pll.vhd",
+    "hw/quartus/vga_fb_fifo.vhd",
 ]
 VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
-    "hw/gpu/tb_vga.vhd",
+    "hw/gpu/tb_gpu.vhd",
+    "hw/gpu/sim_vga.vhd",
 ]
 QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
 
@@ -110,6 +116,7 @@ def build_task_graph():
         ],
     )
     rule("format", nop, ["vsg-fix", "black-fix", "ruff-fix"])
+    rule("sim", nop, ["build/j63_nvc/meta-run"])
     rule("build/meta-black-check", black_check, PYTHON_SOURCES)
     rule("build/meta-ruff-check", ruff_check, PYTHON_SOURCES)
     rule("build/meta-vsg-check", vsg_check, VSG_SOURCES)
@@ -139,7 +146,7 @@ def build_task_graph():
     rule(
         "quartus-j63",
         lambda **kwargs: run(
-            [f"{os.environ["QUARTUS_ROOTDIR"]}/quartus", "j63"],
+            [f"{os.environ["QUARTUS_ROOTDIR"]}/bin/quartus", "j63"],
             cwd="build/j63_quartus",
         ),
         ["build/j63_quartus/meta-built"],
@@ -152,17 +159,28 @@ def build_task_graph():
         VHDL_SOURCES + ["build/j63_nvc/meta-quartus"],
     )
     rule("build/j63_nvc", mkdir, [])
-    rule(
-        "build/j63_nvc/meta-elab-tb_vga",
-        lambda **kwargs: nvc_elaborate(toplevel="tb_vga", **kwargs),
-        ["build/j63_nvc/meta-analyzed"],
-    )
-    rule(
-        "build/j63_nvc/meta-run-tb_vga",
-        lambda **kwargs: nvc_run(toplevel="tb_vga", **kwargs),
-        ["build/j63_nvc/meta-elab-tb_vga"],
-    )
-    rule("build/j63_nvc/meta-run", nop, ["build/j63_nvc/meta-run-tb_vga"])
+
+    rule("build/j63_nvc/meta-run", nop, [])
+
+    def define_simulation(name):
+        rule(
+            f"build/j63_nvc/meta-elab-{name}",
+            lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
+            ["build/j63_nvc/meta-analyzed"],
+        )
+        rule(
+            f"build/j63_nvc/meta-run-{name}",
+            lambda **kwargs: nvc_run(toplevel=name, **kwargs),
+            [f"build/j63_nvc/meta-elab-{name}"],
+        )
+        dependencies["build/j63_nvc/meta-run"].append(f"build/j63_nvc/meta-run-{name}")
+        rule(
+            f"waves-{name}",
+            lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),
+            [],
+        )
+
+    define_simulation("tb_gpu")
 
     for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES:
         rule(source, file_exists, [])
@@ -204,7 +222,7 @@ def task_up_to_date(task, dependencies):
 
 
 def write_vhdl_ls():
-    config = {"libraries": {"j63": {"files": sorted(VHDL_SOURCES)}}}
+    config = {"libraries": {"j63": {"files": VHDL_SOURCES}}}
     pathlib.Path("vhdl_ls.toml").write_text(tomli_w.dumps(config))
 
 
@@ -359,6 +377,7 @@ def nvc_run(toplevel, task, **kwargs):
             str(build_dir),
             "--std=2008",
             "-r",
+            "--ieee-warnings=off",
             f"--wave={build_dir}/{toplevel}.fst",
             f"--gtkw={build_dir}/{toplevel}.gtkw",
             toplevel,

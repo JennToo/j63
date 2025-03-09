@@ -1,0 +1,62 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Sun Mar  9 18:09:44 2025
+[*]
+[dumpfile] "/home/jwilcox/repo/j63/build/j63_nvc/tb_gpu.fst"
+[dumpfile_mtime] "Sun Mar  9 18:06:50 2025"
+[dumpfile_size] 1957830
+[savefile] "/home/jwilcox/repo/j63/hw/gpu/tb_gpu.gtkw"
+[timestart] 0
+[size] 1920 1042
+[pos] -1 -1
+*-40.663593 -1 2202638937850 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_gpu.
+[treeopen] tb_gpu.u_gpu.
+[sst_width] 343
+[signals_width] 283
+[sst_expanded] 1
+[sst_vpaned_height] 513
+@28
+tb_gpu.clk_sys
+tb_gpu.clk_vga
+tb_gpu.arst
+@200
+-
+@28
+tb_gpu.vga_hs
+tb_gpu.vga_vs
+@24
+[color] 1
+tb_gpu.vga_r[7:0]
+[color] 4
+tb_gpu.vga_g[7:0]
+[color] 5
+tb_gpu.vga_b[7:0]
+@28
+tb_gpu.u_gpu.vga_hblank
+@29
+tb_gpu.u_gpu.vga_vblank
+@200
+-
+@28
+tb_gpu.u_gpu.vga_fifo_put
+tb_gpu.u_gpu.vga_fifo_take
+@24
+tb_gpu.u_gpu.vga_fifo_write_count[6:0]
+@28
+tb_gpu.u_gpu.vga_fifo_write_full
+tb_gpu.u_gpu.vga_fifo_write_half_full
+tb_gpu.u_gpu.vga_fifo_read_empty
+@22
+tb_gpu.u_gpu.vga_fifo_data_in[17:0]
+tb_gpu.u_gpu.vga_fifo_data_out[17:0]
+@28
+tb_gpu.u_gpu.vga_fifo_new_line_in
+tb_gpu.u_gpu.vga_fifo_new_line_out
+tb_gpu.u_gpu.vga_fifo_new_frame_in
+tb_gpu.u_gpu.vga_fifo_new_frame_out
+@24
+tb_gpu.u_gpu.vga_fifo_feed_cursor_x[8:0]
+tb_gpu.u_gpu.vga_fifo_feed_cursor_y[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
