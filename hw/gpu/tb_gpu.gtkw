@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Mar  9 18:09:44 2025
+[*] Sun Mar  9 22:58:41 2025
 [*]
 [dumpfile] "/home/jwilcox/repo/j63/build/j63_nvc/tb_gpu.fst"
-[dumpfile_mtime] "Sun Mar  9 18:06:50 2025"
-[dumpfile_size] 1957830
+[dumpfile_mtime] "Sun Mar  9 22:46:25 2025"
+[dumpfile_size] 13189452
 [savefile] "/home/jwilcox/repo/j63/hw/gpu/tb_gpu.gtkw"
-[timestart] 0
+[timestart] 5650120000000
 [size] 1920 1042
 [pos] -1 -1
-*-40.663593 -1 2202638937850 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-27.776857 5651555000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_gpu.
 [treeopen] tb_gpu.u_gpu.
 [sst_width] 343
@@ -34,7 +34,6 @@ tb_gpu.vga_g[7:0]
 tb_gpu.vga_b[7:0]
 @28
 tb_gpu.u_gpu.vga_hblank
-@29
 tb_gpu.u_gpu.vga_vblank
 @200
 -
@@ -55,8 +54,13 @@ tb_gpu.u_gpu.vga_fifo_new_line_in
 tb_gpu.u_gpu.vga_fifo_new_line_out
 tb_gpu.u_gpu.vga_fifo_new_frame_in
 tb_gpu.u_gpu.vga_fifo_new_frame_out
-@24
-tb_gpu.u_gpu.vga_fifo_feed_cursor_x[8:0]
-tb_gpu.u_gpu.vga_fifo_feed_cursor_y[7:0]
+@200
+-
+@22
+tb_gpu.sram_addr[19:0]
+tb_gpu.sram_data_rd[15:0]
+tb_gpu.sram_data_wr[15:0]
+@29
+tb_gpu.sram_we
 [pattern_trace] 1
 [pattern_trace] 0

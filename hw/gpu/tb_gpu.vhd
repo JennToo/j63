@@ -25,6 +25,11 @@ architecture behave of tb_gpu is
   signal vga_g       : std_logic_vector(7 downto 0);
   signal vga_b       : std_logic_vector(7 downto 0);
 
+  signal sram_addr    : std_logic_vector(19 downto 0);
+  signal sram_data_wr : std_logic_vector(15 downto 0);
+  signal sram_data_rd : std_logic_vector(15 downto 0);
+  signal sram_we      : std_logic;
+
 begin
 
   clk_sys <= not clk_sys after clk_sys_period / 2;
@@ -42,7 +47,12 @@ begin
       vga_sync_n  => vga_sync_n,
       vga_r       => vga_r,
       vga_g       => vga_g,
-      vga_b       => vga_b
+      vga_b       => vga_b,
+
+      sram_addr    => sram_addr,
+      sram_data_wr => sram_data_wr,
+      sram_data_rd => sram_data_rd,
+      sram_we      => sram_we
     );
 
   u_sim_vga : entity work.sim_vga
@@ -55,6 +65,17 @@ begin
       vga_r  => vga_r,
       vga_g  => vga_g,
       vga_b  => vga_b
+    );
+
+  u_sim_sram : entity work.sim_sram
+    port map (
+      clk  => clk_sys,
+      arst => arst,
+
+      sram_addr    => sram_addr,
+      sram_data_wr => sram_data_wr,
+      sram_data_rd => sram_data_rd,
+      sram_we      => sram_we
     );
 
   stimulus_p : process is

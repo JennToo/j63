@@ -39,6 +39,7 @@ VHDL_SOURCES = [
     "hw/quartus/vga_fb_fifo.vhd",
     "hw/gpu/vga.vhd",
     "hw/gpu/sim_vga.vhd",
+    "hw/gpu/sim_sram.vhd",
     "hw/gpu/gpu.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/quartus/sys_pll.vhd",
@@ -54,6 +55,7 @@ VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
     "hw/gpu/tb_gpu.vhd",
     "hw/gpu/sim_vga.vhd",
+    "hw/gpu/sim_sram.vhd",
 ]
 QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
 

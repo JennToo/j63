@@ -15,7 +15,12 @@ entity gpu is
     vga_sync_n  : out   std_logic;
     vga_r       : out   std_logic_vector(7 downto 0);
     vga_g       : out   std_logic_vector(7 downto 0);
-    vga_b       : out   std_logic_vector(7 downto 0)
+    vga_b       : out   std_logic_vector(7 downto 0);
+
+    sram_addr    : out   std_logic_vector(19 downto 0);
+    sram_data_wr : out   std_logic_vector(15 downto 0);
+    sram_data_rd : in    std_logic_vector(15 downto 0);
+    sram_we      : out   std_logic
   );
 end entity gpu;
 
@@ -27,7 +32,6 @@ architecture rtl of gpu is
 
   -- sys-clock side
   signal vga_fifo_data_in         : std_logic_vector(17 downto 0);
-  signal vga_fifo_pixel_in        : pixel_t;
   signal vga_fifo_new_line_in     : std_logic;
   signal vga_fifo_new_frame_in    : std_logic;
   signal vga_fifo_put             : std_logic;
@@ -36,6 +40,8 @@ architecture rtl of gpu is
   signal vga_fifo_write_count     : std_logic_vector(6 downto 0);
   signal vga_fifo_feed_cursor_x   : unsigned(vga_width_log2 - 1 downto 0);
   signal vga_fifo_feed_cursor_y   : unsigned(vga_height_log2 - 1 downto 0);
+  signal fb_cursor_x              : std_logic_vector(fb_width_log2 - 1 downto 0);
+  signal fb_cursor_y              : std_logic_vector(fb_height_log2 - 1 downto 0);
 
   -- vga-clock side
   signal vga_fifo_take           : std_logic;
@@ -54,7 +60,7 @@ begin
   vga_b       <= vga_pixel_out.blue;
 
   vga_fifo_data_in         <= vga_fifo_new_frame_in & vga_fifo_new_line_in &
-                              vga_fifo_pixel_in.red & vga_fifo_pixel_in.green & vga_fifo_pixel_in.blue;
+                              sram_data_rd;
   vga_fifo_write_half_full <= vga_fifo_write_count(5);
 
   vga_fifo_take                 <= not vga_fifo_read_empty and vga_blank_n;
@@ -63,6 +69,11 @@ begin
   vga_fifo_wide_pixel_out.blue  <= vga_fifo_data_out(4 downto 0) & "000";
   vga_fifo_new_line_out         <= vga_fifo_data_out(16);
   vga_fifo_new_frame_out        <= vga_fifo_data_out(17);
+
+  sram_we     <= '0';
+  fb_cursor_x <= std_logic_vector(vga_fifo_feed_cursor_x(vga_width_log2 - 1 downto 1));
+  fb_cursor_y <= std_logic_vector(vga_fifo_feed_cursor_y(vga_height_log2 - 1 downto 1));
+  sram_addr   <= "000" & fb_cursor_y & fb_cursor_x;
 
   u_vga : entity work.vga
     port map (
@@ -97,26 +108,20 @@ begin
   begin
 
     if (arst = '0') then
-      vga_fifo_pixel_in.red   <= (others => '0');
-      vga_fifo_pixel_in.green <= (others => '0');
-      vga_fifo_pixel_in.blue  <= (others => '0');
-      vga_fifo_put            <= '0';
-      vga_fifo_feed_cursor_x  <= (others => '0');
-      vga_fifo_feed_cursor_y  <= (others => '0');
-      vga_fifo_new_line_in    <= '1';
-      vga_fifo_new_frame_in   <= '1';
+      vga_fifo_put           <= '0';
+      vga_fifo_feed_cursor_x <= (others => '0');
+      vga_fifo_feed_cursor_y <= (others => '0');
+      vga_fifo_new_line_in   <= '1';
+      vga_fifo_new_frame_in  <= '1';
     elsif rising_edge(clk_sys) then
       vga_fifo_put <= '0';
       -- TODO: A better strategy may be hysterisys. Wait until FIFO is at half
       --       capacity, and then burst up to full in low-priority mode once
       --       over half. This allows the FIFO feeder to soak up unused SRAM BW
       if (vga_fifo_write_half_full = '0') then
-        vga_fifo_pixel_in.red   <= std_logic_vector(vga_fifo_feed_cursor_x(4 downto 0));
-        vga_fifo_pixel_in.green <= (others => '1');
-        vga_fifo_pixel_in.blue  <= std_logic_vector(vga_fifo_feed_cursor_y(4 downto 0));
-        vga_fifo_put            <= '1';
-        vga_fifo_new_line_in    <= '0';
-        vga_fifo_new_frame_in   <= '0';
+        vga_fifo_put          <= '1';
+        vga_fifo_new_line_in  <= '0';
+        vga_fifo_new_frame_in <= '0';
         if (vga_fifo_feed_cursor_x < vga_width - 1) then
           vga_fifo_feed_cursor_x <= vga_fifo_feed_cursor_x + 1;
         else

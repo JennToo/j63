@@ -157,6 +157,10 @@ architecture rtl of j63_toplevel is
   signal vga_hs_i : std_logic;
   signal vga_vs_i : std_logic;
 
+  signal sram_we_i      : std_logic;
+  signal sram_data_wr_i : std_logic_vector(15 downto 0);
+  signal sram_data_rd_i : std_logic_vector(15 downto 0);
+
 begin
 
   -- The system clock (100 MHz) is too dissimilar to the VGA clock (25.175 MHz)
@@ -193,8 +197,22 @@ begin
       vga_sync_n  => vga_sync_n,
       vga_r       => vga_r,
       vga_g       => vga_g,
-      vga_b       => vga_b
+      vga_b       => vga_b,
+
+      sram_addr    => sram_addr,
+      sram_data_wr => sram_data_wr_i,
+      sram_data_rd => sram_data_rd_i,
+      sram_we      => sram_we_i
     );
+
+  sram_data_rd_i <= sram_dq;
+  sram_dq        <= sram_data_wr_i when sram_we_i = '1' else
+                    (others => 'Z');
+  sram_ce_n      <= '0';
+  sram_lb_n      <= '0';
+  sram_ub_n      <= '0';
+  sram_we_n      <= not sram_we_i;
+  sram_oe_n      <= '0';
 
   -- TODO: Create a reset generator for startup
   arst <= '1';
