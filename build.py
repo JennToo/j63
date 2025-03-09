@@ -29,6 +29,7 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.sdc",
     "hw/quartus/j63_toplevel.vhd",
     "hw/quartus/sys_pll.qip",
+    "hw/quartus/vga_pll.qip",
     "hw/quartus/vga_fb_fifo.qip",
 ]
 VHDL_SOURCES = [
@@ -41,10 +42,12 @@ VHDL_SOURCES = [
     "hw/gpu/gpu.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/quartus/sys_pll.vhd",
+    "hw/quartus/vga_pll.vhd",
     "hw/quartus/j63_toplevel.vhd",
 ]
 VSG_EXCLUDED = [
     "hw/quartus/sys_pll.vhd",
+    "hw/quartus/vga_pll.vhd",
     "hw/quartus/vga_fb_fifo.vhd",
 ]
 VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]

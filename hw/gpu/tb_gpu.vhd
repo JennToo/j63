@@ -10,8 +10,8 @@ end entity tb_gpu;
 
 architecture behave of tb_gpu is
 
-  constant clk_vga_period : time := 39.72194638 ns;     -- 25.175 MHz
-  constant clk_sys_period : time := clk_vga_period / 4; -- 100.7 MHz
+  constant clk_vga_period : time := 39.72194638 ns; -- 25.175 MHz
+  constant clk_sys_period : time := 10          ns; -- 100    MHz
 
   signal clk_vga : std_logic := '0';
   signal clk_sys : std_logic := '0';
