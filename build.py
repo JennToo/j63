@@ -40,6 +40,7 @@ VHDL_SOURCES = [
     "hw/gpu/vga.vhd",
     "hw/gpu/sim_vga.vhd",
     "hw/gpu/sim_sram.vhd",
+    "hw/gpu/sram_arbiter.vhd",
     "hw/gpu/gpu.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/quartus/sys_pll.vhd",
