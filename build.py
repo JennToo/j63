@@ -166,6 +166,7 @@ def build_task_graph():
     rule("build/j63_nvc", mkdir, [])
 
     rule("build/j63_nvc/meta-run", nop, [])
+    rule("build/j63_nvc/meta-elab", nop, [])
 
     def define_simulation(name):
         rule(
@@ -179,6 +180,9 @@ def build_task_graph():
             [f"build/j63_nvc/meta-elab-{name}"],
         )
         dependencies["build/j63_nvc/meta-run"].append(f"build/j63_nvc/meta-run-{name}")
+        dependencies["build/j63_nvc/meta-elab"].append(
+            f"build/j63_nvc/meta-elab-{name}"
+        )
         rule(
             f"waves-{name}",
             lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),

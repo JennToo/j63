@@ -4,13 +4,13 @@ library ieee;
 
 entity sim_sram is
   port (
-    clk  : in    std_logic;
-    arst : in    std_logic;
+    clk_i : in    std_logic;
+    rst_i : in    std_logic;
 
-    sram_addr    : in    std_logic_vector(19 downto 0);
-    sram_data_wr : in    std_logic_vector(15 downto 0);
-    sram_data_rd : out   std_logic_vector(15 downto 0);
-    sram_we      : in    std_logic
+    sram_addr_i : in    std_logic_vector(19 downto 0);
+    sram_data_i : in    std_logic_vector(15 downto 0);
+    sram_data_o : out   std_logic_vector(15 downto 0);
+    sram_we_i   : in    std_logic
   );
 end entity sim_sram;
 
@@ -24,16 +24,16 @@ architecture behave of sim_sram is
 
 begin
 
-  rw_p : process (clk, arst) is
+  rw_p : process (clk_i, rst_i) is
   begin
 
-    if (arst = '0') then
-      sram_data_rd <= (others => '0');
-    elsif rising_edge(clk) then
-      if (sram_we = '1') then
-        memory(to_integer(unsigned(sram_addr))) <= sram_data_wr;
+    if (rst_i = '0') then
+      sram_data_o <= (others => '0');
+    elsif rising_edge(clk_i) then
+      if (sram_we_i = '1') then
+        memory(to_integer(unsigned(sram_addr_i))) <= sram_data_i;
       else
-        sram_data_rd <= memory(to_integer(unsigned(sram_addr)));
+        sram_data_o <= memory(to_integer(unsigned(sram_addr_i)));
       end if;
     end if;
 

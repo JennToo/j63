@@ -6,9 +6,9 @@
 #**************************************************************
 # Create Clock
 #**************************************************************
-create_clock -period 20.000ns [get_ports CLOCK_50]
-create_clock -period 20.000ns [get_ports CLOCK2_50]
-create_clock -period 20.000ns [get_ports CLOCK3_50]
+create_clock -period 20.000ns [get_ports clock_50_i]
+create_clock -period 20.000ns [get_ports clock2_50_i]
+create_clock -period 20.000ns [get_ports clock3_50_i]
 
 #**************************************************************
 # Create Generated Clock
