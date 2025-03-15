@@ -41,6 +41,7 @@ VHDL_SOURCES = [
     "hw/quartus/vga_fb_fifo.vhd",
     "hw/gpu/vga.vhd",
     "hw/gpu/sim_vga.vhd",
+    "hw/gpu/fb_dma.vhd",
     "hw/gpu/gpu.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/quartus/sys_pll.vhd",
