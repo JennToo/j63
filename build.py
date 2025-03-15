@@ -156,6 +156,19 @@ def build_task_graph():
         ),
         ["build/j63_quartus/meta-built"],
     )
+    rule(
+        "program",
+        lambda **kwargs: run(
+            [
+                f"{os.environ["QUARTUS_ROOTDIR"]}/bin/quartus_pgm",
+                "--cable=1",
+                "--mode=jtag",
+                "-o",
+                "p;./build/j63_quartus/j63.sof@1",
+            ],
+        ),
+        ["build/j63_quartus/meta-built"],
+    )
 
     rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
     rule(
