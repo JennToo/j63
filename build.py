@@ -35,11 +35,12 @@ QUARTUS_PROJECT_FILES = [
 VHDL_SOURCES = [
     "hw/common/math_pkg.vhd",
     "hw/common/test_pkg.vhd",
+    "hw/mem/sim_sram.vhd",
+    "hw/mem/wb_sram.vhd",
     "hw/gpu/gpu_pkg.vhd",
     "hw/quartus/vga_fb_fifo.vhd",
     "hw/gpu/vga.vhd",
     "hw/gpu/sim_vga.vhd",
-    "hw/gpu/sim_sram.vhd",
     "hw/gpu/gpu.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/quartus/sys_pll.vhd",
@@ -53,9 +54,9 @@ VSG_EXCLUDED = [
 ]
 VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
+    "hw/mem/sim_sram.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/gpu/sim_vga.vhd",
-    "hw/gpu/sim_sram.vhd",
 ]
 QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
 
