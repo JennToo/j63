@@ -22,18 +22,17 @@ entity vga is
     vsync_polarity    : std_logic := '1'
   );
   port (
-    clk  : in    std_logic;
-    arst : in    std_logic;
-
-    sync_frame_start : in    std_logic;
+    clk_i : in    std_logic;
+    rst_i : in    std_logic;
 
     pixel_i : in    wide_pixel_t;
     pixel_o : out   wide_pixel_t;
 
-    hsync  : out   std_logic;
-    vsync  : out   std_logic;
-    hblank : out   std_logic;
-    vblank : out   std_logic
+    sync_frame_start_i : in    std_logic;
+    hsync_o            : out   std_logic;
+    vsync_o            : out   std_logic;
+    hblank_o           : out   std_logic;
+    vblank_o           : out   std_logic
   );
 end entity vga;
 
@@ -56,31 +55,31 @@ architecture rtl of vga is
 
 begin
 
-  hblank      <= '1' when htimer < hblank_region else
+  hblank_o    <= '1' when htimer < hblank_region else
                  '0';
-  vblank      <= '1' when vtimer < vblank_region else
+  vblank_o    <= '1' when vtimer < vblank_region else
                  '0';
   black.red   <= (others => '0');
   black.green <= (others => '0');
   black.blue  <= (others => '0');
-  pixel_o     <= pixel_i when hblank = '0' and vblank = '0' else
+  pixel_o     <= pixel_i when hblank_o = '0' and vblank_o = '0' else
                  black;
 
-  hsync <= not hsync_polarity when htimer >= hsync_front_porch and
-                                   htimer < hsync_front_porch + hsync_sync_pulse else
-           hsync_polarity;
-  vsync <= not vsync_polarity when vtimer >= vsync_front_porch and
-                                   vtimer < vsync_front_porch + vsync_sync_pulse else
-           vsync_polarity;
+  hsync_o <= not hsync_polarity when htimer >= hsync_front_porch and
+                                     htimer < hsync_front_porch + hsync_sync_pulse else
+             hsync_polarity;
+  vsync_o <= not vsync_polarity when vtimer >= vsync_front_porch and
+                                     vtimer < vsync_front_porch + vsync_sync_pulse else
+             vsync_polarity;
 
-  timers : process (clk, arst) is
+  timers_p : process (clk_i, rst_i) is
   begin
 
-    if (arst = '0') then
+    if (rst_i = '0') then
       htimer <= to_unsigned(0, htimer_width);
       vtimer <= to_unsigned(0, vtimer_width);
-    elsif rising_edge(clk) then
-      if (sync_frame_start = '1') then
+    elsif rising_edge(clk_i) then
+      if (sync_frame_start_i = '1') then
         htimer <= to_unsigned(0, htimer_width);
         vtimer <= to_unsigned(0, vtimer_width);
       else
@@ -97,6 +96,6 @@ begin
       end if;
     end if;
 
-  end process timers;
+  end process timers_p;
 
 end architecture rtl;

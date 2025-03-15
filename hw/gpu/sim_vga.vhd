@@ -8,14 +8,14 @@ library ieee;
 
 entity sim_vga is
   port (
-    clk  : in    std_logic;
-    arst : in    std_logic;
+    clk_i : in    std_logic;
+    rst_i : in    std_logic;
 
-    vga_hs : in    std_logic;
-    vga_vs : in    std_logic;
-    vga_r  : in    std_logic_vector(7 downto 0);
-    vga_g  : in    std_logic_vector(7 downto 0);
-    vga_b  : in    std_logic_vector(7 downto 0)
+    vga_hs_i : in    std_logic;
+    vga_vs_i : in    std_logic;
+    vga_r_i  : in    std_logic_vector(7 downto 0);
+    vga_g_i  : in    std_logic_vector(7 downto 0);
+    vga_b_i  : in    std_logic_vector(7 downto 0)
   );
 end entity sim_vga;
 
@@ -37,19 +37,19 @@ architecture behave of sim_vga is
 
 begin
 
-  sync_verification : process (clk, arst) is
+  sync_verification_p : process (clk_i, rst_i) is
 
     variable time_difference : time;
 
   begin
 
-    if (arst = '0') then
+    if (rst_i = '0') then
       vga_hs_d      <= '1';
       vga_vs_d      <= '1';
       seen_first_hs <= '0';
       seen_first_vs <= '0';
-    elsif rising_edge(clk) then
-      if (vga_hs = '0' and vga_hs_d = '1') then
+    elsif rising_edge(clk_i) then
+      if (vga_hs_i = '0' and vga_hs_d = '1') then
         if (seen_first_hs = '0') then
           seen_first_hs <= '1';
         else
@@ -60,13 +60,13 @@ begin
         end if;
         vga_hs_start <= now;
       end if;
-      if (vga_hs = '1' and vga_hs_d = '0') then
+      if (vga_hs_i = '1' and vga_hs_d = '0') then
         time_difference := now - vga_hs_start;
         assert time_equal_ish(time_difference, vga_hs_pulse, epsilon)
           report "Invalid HSYNC pulse length " & time'image(time_difference)
           severity error;
       end if;
-      if (vga_vs = '0' and vga_vs_d = '1') then
+      if (vga_vs_i = '0' and vga_vs_d = '1') then
         if (seen_first_vs = '0') then
           seen_first_vs <= '1';
         else
@@ -77,16 +77,16 @@ begin
         end if;
         vga_vs_start <= now;
       end if;
-      if (vga_vs = '1' and vga_vs_d = '0') then
+      if (vga_vs_i = '1' and vga_vs_d = '0') then
         time_difference := now - vga_vs_start;
         assert time_equal_ish(time_difference, vga_vs_pulse, epsilon)
           report "Invalid VSYNC pulse length " & time'image(time_difference)
           severity error;
       end if;
-      vga_hs_d <= vga_hs;
-      vga_vs_d <= vga_vs;
+      vga_hs_d <= vga_hs_i;
+      vga_vs_d <= vga_vs_i;
     end if;
 
-  end process sync_verification;
+  end process sync_verification_p;
 
 end architecture behave;

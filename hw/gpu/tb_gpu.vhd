@@ -15,7 +15,7 @@ architecture behave of tb_gpu is
 
   signal clk_vga : std_logic := '0';
   signal clk_sys : std_logic := '0';
-  signal arst    : std_logic;
+  signal rst     : std_logic;
 
   signal vga_hs      : std_logic;
   signal vga_vs      : std_logic;
@@ -37,53 +37,53 @@ begin
 
   u_gpu : entity work.gpu
     port map (
-      clk_sys => clk_sys,
-      clk_vga => clk_vga,
-      arst    => arst,
+      clk_sys_i => clk_sys,
+      clk_vga_i => clk_vga,
+      rst_i     => rst,
 
-      vga_hs      => vga_hs,
-      vga_vs      => vga_vs,
-      vga_blank_n => vga_blank_n,
-      vga_sync_n  => vga_sync_n,
-      vga_r       => vga_r,
-      vga_g       => vga_g,
-      vga_b       => vga_b,
+      vga_hs_o     => vga_hs,
+      vga_vs_o     => vga_vs,
+      vga_blank_no => vga_blank_n,
+      vga_sync_no  => vga_sync_n,
+      vga_r_o      => vga_r,
+      vga_g_o      => vga_g,
+      vga_b_o      => vga_b,
 
-      sram_addr    => sram_addr,
-      sram_data_wr => sram_data_wr,
-      sram_data_rd => sram_data_rd,
-      sram_we      => sram_we
+      sram_addr_o => sram_addr,
+      sram_data_o => sram_data_wr,
+      sram_data_i => sram_data_rd,
+      sram_we_o   => sram_we
     );
 
   u_sim_vga : entity work.sim_vga
     port map (
-      clk  => clk_vga,
-      arst => arst,
+      clk_i => clk_vga,
+      rst_i => rst,
 
-      vga_hs => vga_hs,
-      vga_vs => vga_vs,
-      vga_r  => vga_r,
-      vga_g  => vga_g,
-      vga_b  => vga_b
+      vga_hs_i => vga_hs,
+      vga_vs_i => vga_vs,
+      vga_r_i  => vga_r,
+      vga_g_i  => vga_g,
+      vga_b_i  => vga_b
     );
 
   u_sim_sram : entity work.sim_sram
     port map (
-      clk  => clk_sys,
-      arst => arst,
+      clk_i => clk_sys,
+      rst_i => rst,
 
-      sram_addr    => sram_addr,
-      sram_data_wr => sram_data_wr,
-      sram_data_rd => sram_data_rd,
-      sram_we      => sram_we
+      sram_addr_i => sram_addr,
+      sram_data_i => sram_data_wr,
+      sram_data_o => sram_data_rd,
+      sram_we_i   => sram_we
     );
 
   stimulus_p : process is
   begin
 
-    arst <= '0';
+    rst <= '0';
     wait for clk_sys_period;
-    arst <= '1';
+    rst <= '1';
 
     wait until rising_edge(vga_vs);
     wait until rising_edge(vga_vs);

@@ -4,3 +4,9 @@ rule:
   # Default assignments are very useful in simulation
   signal_007:
     disable: true
+  port_025:
+    disable: false
+    suffixes: ["_i", "_o", "_io", "_ni", "_no"]
+  process_600:
+    disable: false
+    suffixes: ["_p"]
