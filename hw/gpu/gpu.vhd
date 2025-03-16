@@ -34,6 +34,16 @@ architecture rtl of gpu is
   signal dma_wide_pixel : wide_pixel_t;
   signal dma_new_frame  : std_logic;
 
+  signal fb_dma_wb_cyc    : std_logic;
+  signal fb_dma_wb_dat_wr : std_logic_vector(15 downto 0);
+  signal fb_dma_wb_dat_rd : std_logic_vector(15 downto 0);
+  signal fb_dma_wb_ack    : std_logic;
+  signal fb_dma_wb_addr   : std_logic_vector(19 downto 0);
+  signal fb_dma_wb_stall  : std_logic;
+  signal fb_dma_wb_sel    : std_logic_vector(1 downto 0);
+  signal fb_dma_wb_stb    : std_logic;
+  signal fb_dma_wb_we     : std_logic;
+
 begin
 
   vga_sync_no  <= '0';
@@ -71,6 +81,32 @@ begin
       vga_blank_ni => vga_blank_n,
       new_frame_o  => dma_new_frame,
       pixel_o      => dma_wide_pixel
+    );
+
+  u_wb_vram : entity work.wb_sram
+    generic map (
+      addr_width => 20,
+      data_width => 16
+    )
+    port map (
+      clk_i => clk_sys_i,
+      rst_i => rst_i,
+
+      wb_cyc_i   => fb_dma_wb_cyc,
+      wb_dat_i   => fb_dma_wb_dat_wr,
+      wb_dat_o   => fb_dma_wb_dat_rd,
+      wb_ack_o   => fb_dma_wb_ack,
+      wb_addr_i  => fb_dma_wb_addr,
+      wb_stall_o => fb_dma_wb_stall,
+      wb_sel_i   => fb_dma_wb_sel,
+      wb_stb_i   => fb_dma_wb_stb,
+      wb_we_i    => fb_dma_wb_we,
+
+      sram_addr_o => sram_addr_o,
+      sram_dat_o  => sram_data_o,
+      sram_dat_i  => sram_data_i,
+      sram_sel_o  => open,
+      sram_we_o   => sram_we_o
     );
 
 end architecture rtl;

@@ -10,10 +10,15 @@ entity fb_dma is
     rst_i     : in    std_logic;
 
     -- VRAM interface
-    sram_addr_o : out   std_logic_vector(19 downto 0);
-    sram_data_o : out   std_logic_vector(15 downto 0);
-    sram_data_i : in    std_logic_vector(15 downto 0);
-    sram_we_o   : out   std_logic;
+    vram_wb_cyc_o   : out   std_logic;
+    vram_wb_dat_o   : out   std_logic_vector(15 downto 0);
+    vram_wb_dat_i   : in    std_logic_vector(15 downto 0);
+    vram_wb_ack_i   : in    std_logic;
+    vram_wb_addr_o  : out   std_logic_vector(19 downto 0);
+    vram_wb_stall_i : in    std_logic;
+    vram_wb_sel_o   : out   std_logic_vector(1 downto 0);
+    vram_wb_stb_o   : out   std_logic;
+    vram_wb_we_o    : out   std_logic;
 
     -- Video interface
     vga_blank_ni : in    std_logic;
@@ -23,6 +28,9 @@ entity fb_dma is
 end entity fb_dma;
 
 architecture rtl of fb_dma is
+  constant fifo_depth : natural := 128;
+
+  type feeder_state_t is (idle, feeding);
 
   -- sys-clock side
   signal vga_fifo_data_in         : std_logic_vector(17 downto 0);
@@ -32,10 +40,12 @@ architecture rtl of fb_dma is
   signal vga_fifo_write_full      : std_logic;
   signal vga_fifo_write_half_full : std_logic;
   signal vga_fifo_write_count     : std_logic_vector(6 downto 0);
-  signal vga_fifo_feed_cursor_x   : unsigned(vga_width_log2 - 1 downto 0);
+  signal vga_fifo_feed_cursor_x   : unsigned(fb_width_log2 - 1 downto 0);
   signal vga_fifo_feed_cursor_y   : unsigned(vga_height_log2 - 1 downto 0);
-  signal fb_cursor_x              : std_logic_vector(fb_width_log2 - 1 downto 0);
-  signal fb_cursor_y              : std_logic_vector(fb_height_log2 - 1 downto 0);
+  signal request_cursor_x         : unsigned(fb_width_log2 - 1 downto 0);
+  signal request_cursor_y         : unsigned(fb_height_log2 - 1 downto 0);
+  signal request_count            : unsigned(6 downto 0);
+  signal feeder_state             : feeder_state_t;
 
   -- vga-clock side
   signal vga_fifo_take         : std_logic;
@@ -46,7 +56,7 @@ architecture rtl of fb_dma is
 begin
 
   vga_fifo_data_in         <= vga_fifo_new_frame_in & vga_fifo_new_line_in &
-                              sram_data_i;
+                              vram_wb_dat_i;
   vga_fifo_write_half_full <= vga_fifo_write_count(5);
 
   vga_fifo_take         <= not vga_fifo_read_empty and vga_blank_ni;
@@ -56,10 +66,10 @@ begin
   vga_fifo_new_line_out <= vga_fifo_data_out(16);
   new_frame_o           <= vga_fifo_data_out(17);
 
-  sram_we_o   <= '0';
-  fb_cursor_x <= std_logic_vector(vga_fifo_feed_cursor_x(vga_width_log2 - 1 downto 1));
-  fb_cursor_y <= std_logic_vector(vga_fifo_feed_cursor_y(vga_height_log2 - 1 downto 1));
-  sram_addr_o <= "000" & fb_cursor_y & fb_cursor_x;
+  -- Always read, two bytes
+  vram_wb_sel_o  <= "11";
+  vram_wb_we_o   <= '0';
+  vram_wb_addr_o <= "000" & std_logic_vector(request_cursor_x) & STD_LOGIC_VECTOR(request_cursor_y);
 
   u_vga_fifo : entity work.vga_fb_fifo
     port map (
@@ -75,6 +85,25 @@ begin
       rdempty => vga_fifo_read_empty
     );
 
+  wb_driver_p : process (clk_sys_i, rst_i) is
+  begin
+
+    if (rst_i = '0') then
+      feeder_state <= idle;
+      vram_wb_cyc_o <= '0';
+      vram_wb_stb_o <= '0';
+      request_count <= d"0";
+    elsif rising_edge(clk_sys_i) then
+      if (vga_fifo_write_half_full = '0' and feeder_state = idle) then
+        feeder_state <= feeding;
+        vram_wb_cyc_o <= '1';
+        vram_wb_stb_o <= '1';
+        request_count <= to_unsigned(fifo_depth, 7) - unsigned(vga_fifo_write_count);
+      end if;
+    end if;
+
+  end process wb_driver_p;
+
   vga_fifo_pusher_p : process (clk_sys_i, rst_i) is
   begin
 
@@ -86,10 +115,8 @@ begin
       vga_fifo_new_frame_in  <= '1';
     elsif rising_edge(clk_sys_i) then
       vga_fifo_put <= '0';
-      -- TODO: A better strategy may be hysterisys. Wait until FIFO is at half
-      --       capacity, and then burst up to full in low-priority mode once
-      --       over half. This allows the FIFO feeder to soak up unused SRAM BW
-      if (vga_fifo_write_half_full = '0') then
+      -- On ACK, save data and advance the cursor
+      if (vram_wb_ack_i = '1') then
         vga_fifo_put          <= '1';
         vga_fifo_new_line_in  <= '0';
         vga_fifo_new_frame_in <= '0';
