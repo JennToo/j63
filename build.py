@@ -36,6 +36,7 @@ VHDL_SOURCES = [
     "hw/common/math_pkg.vhd",
     "hw/common/test_pkg.vhd",
     "hw/mem/wb_sram.vhd",
+    "hw/mem/wb_dma_to_fifo.vhd",
     "hw/gpu/gpu_pkg.vhd",
     "hw/quartus/vga_fb_fifo.vhd",
     "hw/gpu/vga.vhd",
