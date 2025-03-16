@@ -1,0 +1,4 @@
+vunit i_wb_sram(wb_sram(synthesis))
+{
+  default clock is rising_edge(clk_i);
+}

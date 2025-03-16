@@ -60,6 +60,7 @@ QUARTUS_EXCLUDED = [
     "hw/gpu/sim_sram.vhd",
 ]
 QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
+SBY_FILES = ["hw/mem/wb_sram.sby"]
 
 
 def main():
@@ -172,6 +173,30 @@ def build_task_graph():
         ["build/j63_quartus/meta-built"],
     )
 
+    rule("formal", nop, [])
+
+    def define_sby(sby_file):
+        sby_path = pathlib.Path(sby_file)
+        name = pathlib.Path(sby_path).name.split(".")[0]
+        target = f"build/formal/meta-run-{name}"
+        prefix = f"build/formal/{name}"
+
+        sby_contents = sby_path.read_text(encoding="utf-8").splitlines(keepends=False)
+        file_section_start = sby_contents.index("[files]")
+        file_deps = sby_contents[file_section_start + 1 :]
+        for source in file_deps:
+            rule(source, file_exists, [])
+
+        rule(
+            target,
+            lambda **kwargs: sby_run(sby_file=sby_file, prefix=prefix, **kwargs),
+            [sby_file] + file_deps,
+        )
+        dependencies["formal"].append(target)
+
+    for sby_file in SBY_FILES:
+        define_sby(sby_file)
+
     rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
     rule(
         "build/j63_nvc/meta-analyzed",
@@ -206,7 +231,7 @@ def build_task_graph():
 
     define_simulation("tb_gpu")
 
-    for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES:
+    for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES + SBY_FILES:
         rule(source, file_exists, [])
 
     return Tasks(dependencies=dependencies, builders=builders)
@@ -355,6 +380,21 @@ def build_quartus_project(task, dependencies, **kwargs):
     touch(task)
 
 
+def sby_run(sby_file, prefix, task, **kwargs):
+    oss_cad_run(
+        [
+            "sby",
+            "--yosys",
+            "yosys -m ghdl",
+            "-f",
+            "--prefix",
+            prefix,
+            sby_file,
+        ]
+    )
+    touch(task)
+
+
 def nvc_quartus_install(task, **kwargs):
     build_dir = pathlib.Path(task).parent
 
@@ -413,6 +453,18 @@ def nvc_run(toplevel, task, **kwargs):
 def touch(path):
     mkdir(pathlib.Path(path).parent)
     pathlib.Path(path).write_text("")
+
+
+def oss_cad_run(cmd, cwd=None):
+    cad_root = os.environ["OSS_CAD_ROOTDIR"]
+
+    env = os.environ.copy()
+    env["PATH"] = f"{cad_root}/bin:{cad_root}/py3bin:{env['PATH']}"
+    env["GHDL_PREFIX"] = f"{cad_root}/lib/ghdl"
+    env["VERILATOR_ROOT"] = f"{cad_root}/share/verilator"
+    env["VIRTUAL_ENV"] = cad_root
+
+    run(cmd, cwd=cwd, env=env)
 
 
 def run(cmd, cwd=None, env=None):
