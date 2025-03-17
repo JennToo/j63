@@ -1,9 +1,15 @@
 rule:
+  # Component declarations are very tedious
   instantiation_034:
     method: entity
+
   # Default assignments are very useful in simulation
   signal_007:
     disable: true
+  port_012:
+    disable: true
+
+  # Normally "Hungarian Notation" is overkill. But in this context, it is handy
   port_025:
     disable: false
     suffixes: ["_i", "_o", "_io", "_ni", "_no"]

@@ -1,0 +1,45 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Sun Mar 16 23:43:06 2025
+[*]
+[dumpfile] "/home/jwilcox/repo/j63/build/formal/wb_sram_bmc/engine_0/trace.vcd"
+[dumpfile_mtime] "Sun Mar 16 23:39:53 2025"
+[dumpfile_size] 1243
+[savefile] "/home/jwilcox/repo/j63/hw/mem/wb_sram.gtkw"
+[timestart] 0
+[size] 1446 810
+[pos] -1 -1
+*-1.639763 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 170
+[signals_width] 172
+[sst_expanded] 1
+[sst_vpaned_height] 298
+@28
+wb_sram.clk_i
+wb_sram.rst_i
+@200
+-
+@29
+wb_sram.sram_we_o
+@22
+wb_sram.sram_addr_o[19:0]
+wb_sram.sram_dat_i[15:0]
+wb_sram.sram_dat_o[15:0]
+@28
+wb_sram.sram_sel_o[1:0]
+@200
+-
+@28
+wb_sram.wb_cyc_i
+wb_sram.wb_stb_i
+wb_sram.wb_we_i
+wb_sram.wb_stall_o
+wb_sram.wb_ack_o
+@22
+wb_sram.wb_addr_i[19:0]
+wb_sram.wb_dat_i[15:0]
+wb_sram.wb_dat_o[15:0]
+@28
+wb_sram.wb_sel_i[1:0]
+[pattern_trace] 1
+[pattern_trace] 0

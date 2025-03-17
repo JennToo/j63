@@ -12,7 +12,7 @@ cover: depth 10
 smtbmc
 
 [script]
-ghdl --std=08 wb_sram.vhd wb_sram.psl -e wb_sram
+ghdl --std=08 -gaddr_width=20 -gdata_width=16 wb_sram.vhd wb_sram.psl -e wb_sram
 prep -top wb_sram
 
 [files]
