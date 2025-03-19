@@ -98,7 +98,9 @@ def main():
             for task in task_iter.get_ready():
                 open_futures.add(executor.submit(run_task, task))
 
-            futures = concurrent.futures.wait(open_futures)
+            futures = concurrent.futures.wait(
+                open_futures, return_when=concurrent.futures.FIRST_COMPLETED
+            )
             open_futures = futures.not_done
             for completed in futures.done:
                 task_iter.done(completed.result())
