@@ -1,2 +1,3 @@
 /build
 /vhdl_ls.toml
+/hw/gpu/gpu-cosim/target
