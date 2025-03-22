@@ -192,7 +192,12 @@ def build_task_graph():
     rule("build/j63_nvc/meta-elab", nop, [])
 
     gpu_cosim_meta = define_crate(rule, dependencies, "gpu-cosim", "hw/gpu/gpu-cosim/")
-    gpu_sim_run_meta = define_simulation(rule, dependencies, "tb_gpu")
+    gpu_sim_run_meta = define_simulation(
+        rule,
+        dependencies,
+        "tb_gpu",
+        run_args=["--load", "hw/gpu/gpu-cosim/target/release/libgpucosim.so"],
+    )
     dependencies[gpu_sim_run_meta].append(gpu_cosim_meta)
 
     for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES + SBY_FILES:
@@ -221,7 +226,7 @@ def define_sby(rule, dependencies, sby_file):
     dependencies["formal"].append(target)
 
 
-def define_simulation(rule, dependencies, name):
+def define_simulation(rule, dependencies, name, run_args):
     rule(
         f"build/j63_nvc/meta-elab-{name}",
         lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
@@ -230,7 +235,7 @@ def define_simulation(rule, dependencies, name):
     run_meta = f"build/j63_nvc/meta-run-{name}"
     rule(
         run_meta,
-        lambda **kwargs: nvc_run(toplevel=name, **kwargs),
+        lambda **kwargs: nvc_run(toplevel=name, run_args=run_args, **kwargs),
         [f"build/j63_nvc/meta-elab-{name}"],
     )
     dependencies["build/j63_nvc/meta-run"].append(f"build/j63_nvc/meta-run-{name}")
@@ -260,6 +265,9 @@ def define_crate(rule, dependencies, name, path):
         rule(src, file_exists, [])
 
     rule(meta_file, build_crate, sources)
+
+    rule(f"format-{name}", lambda **kwargs: run(["cargo", "fmt"], cwd=path), [])
+    dependencies["format"].append(f"format-{name}")
 
     return meta_file
 
@@ -460,6 +468,7 @@ def nvc_elaborate(toplevel, task, **kwargs):
 
 def nvc_run(toplevel, task, **kwargs):
     build_dir = pathlib.Path(task).parent
+    run_args = kwargs.get("run_args", [])
     run(
         [
             "nvc",
@@ -468,6 +477,9 @@ def nvc_run(toplevel, task, **kwargs):
             str(build_dir),
             "--std=2008",
             "-r",
+        ]
+        + run_args
+        + [
             "--ieee-warnings=off",
             f"--wave={build_dir}/{toplevel}.fst",
             f"--gtkw={build_dir}/{toplevel}.gtkw",
