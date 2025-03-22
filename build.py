@@ -177,27 +177,8 @@ def build_task_graph():
 
     rule("formal", nop, [])
 
-    def define_sby(sby_file):
-        sby_path = pathlib.Path(sby_file)
-        name = pathlib.Path(sby_path).name.split(".")[0]
-        target = f"build/formal/meta-run-{name}"
-        prefix = f"build/formal/{name}"
-
-        sby_contents = sby_path.read_text(encoding="utf-8").splitlines(keepends=False)
-        file_section_start = sby_contents.index("[files]")
-        file_deps = sby_contents[file_section_start + 1 :]
-        for source in file_deps:
-            rule(source, file_exists, [])
-
-        rule(
-            target,
-            lambda **kwargs: sby_run(sby_file=sby_file, prefix=prefix, **kwargs),
-            [sby_file] + file_deps,
-        )
-        dependencies["formal"].append(target)
-
     for sby_file in SBY_FILES:
-        define_sby(sby_file)
+        define_sby(rule, dependencies, sby_file)
 
     rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
     rule(
@@ -210,33 +191,77 @@ def build_task_graph():
     rule("build/j63_nvc/meta-run", nop, [])
     rule("build/j63_nvc/meta-elab", nop, [])
 
-    def define_simulation(name):
-        rule(
-            f"build/j63_nvc/meta-elab-{name}",
-            lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
-            ["build/j63_nvc/meta-analyzed"],
-        )
-        rule(
-            f"build/j63_nvc/meta-run-{name}",
-            lambda **kwargs: nvc_run(toplevel=name, **kwargs),
-            [f"build/j63_nvc/meta-elab-{name}"],
-        )
-        dependencies["build/j63_nvc/meta-run"].append(f"build/j63_nvc/meta-run-{name}")
-        dependencies["build/j63_nvc/meta-elab"].append(
-            f"build/j63_nvc/meta-elab-{name}"
-        )
-        rule(
-            f"waves-{name}",
-            lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),
-            [],
-        )
-
-    define_simulation("tb_gpu")
+    gpu_cosim_meta = define_crate(rule, dependencies, "gpu-cosim", "hw/gpu/gpu-cosim/")
+    gpu_sim_run_meta = define_simulation(rule, dependencies, "tb_gpu")
+    dependencies[gpu_sim_run_meta].append(gpu_cosim_meta)
 
     for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES + SBY_FILES:
         rule(source, file_exists, [])
 
     return Tasks(dependencies=dependencies, builders=builders)
+
+
+def define_sby(rule, dependencies, sby_file):
+    sby_path = pathlib.Path(sby_file)
+    name = pathlib.Path(sby_path).name.split(".")[0]
+    target = f"build/formal/meta-run-{name}"
+    prefix = f"build/formal/{name}"
+
+    sby_contents = sby_path.read_text(encoding="utf-8").splitlines(keepends=False)
+    file_section_start = sby_contents.index("[files]")
+    file_deps = sby_contents[file_section_start + 1 :]
+    for source in file_deps:
+        rule(source, file_exists, [])
+
+    rule(
+        target,
+        lambda **kwargs: sby_run(sby_file=sby_file, prefix=prefix, **kwargs),
+        [sby_file] + file_deps,
+    )
+    dependencies["formal"].append(target)
+
+
+def define_simulation(rule, dependencies, name):
+    rule(
+        f"build/j63_nvc/meta-elab-{name}",
+        lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
+        ["build/j63_nvc/meta-analyzed"],
+    )
+    run_meta = f"build/j63_nvc/meta-run-{name}"
+    rule(
+        run_meta,
+        lambda **kwargs: nvc_run(toplevel=name, **kwargs),
+        [f"build/j63_nvc/meta-elab-{name}"],
+    )
+    dependencies["build/j63_nvc/meta-run"].append(f"build/j63_nvc/meta-run-{name}")
+    dependencies["build/j63_nvc/meta-elab"].append(f"build/j63_nvc/meta-elab-{name}")
+    rule(
+        f"waves-{name}",
+        lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),
+        [],
+    )
+    return run_meta
+
+
+def define_crate(rule, dependencies, name, path):
+    path = pathlib.Path(path)
+    sources = list((path / "src").rglob("*.rs")) + [
+        path / "Cargo.toml",
+        path / "Cargo.lock",
+    ]
+    meta_file = pathlib.Path(f"build/crates/meta-{name}")
+    meta_file.parent.mkdir(parents=True, exist_ok=True)
+
+    def build_crate(**kwargs):
+        run(["cargo", "build", "--release"], cwd=path)
+        touch(meta_file)
+
+    for src in sources:
+        rule(src, file_exists, [])
+
+    rule(meta_file, build_crate, sources)
+
+    return meta_file
 
 
 def filter_tasks(tasks, requested):
