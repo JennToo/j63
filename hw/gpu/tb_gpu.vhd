@@ -19,6 +19,7 @@ architecture behave of tb_gpu is
 
   signal vga_hs      : std_logic;
   signal vga_vs      : std_logic;
+  signal vga_vs_d    : std_logic;
   signal vga_blank_n : std_logic;
   signal vga_sync_n  : std_logic;
   signal vga_r       : std_logic_vector(7 downto 0);
@@ -29,6 +30,31 @@ architecture behave of tb_gpu is
   signal sram_data_wr : std_logic_vector(15 downto 0);
   signal sram_data_rd : std_logic_vector(15 downto 0);
   signal sram_we      : std_logic;
+
+  procedure vga_cycle (
+    r : in std_logic_vector(7 downto 0);
+    g : in std_logic_vector(7 downto 0);
+    b : in std_logic_vector(7 downto 0)
+  ) is
+  begin
+
+    assert false
+      report "Not reachable"
+      severity failure;
+
+  end procedure vga_cycle;
+
+  procedure vga_save_frame is
+  begin
+
+    assert false
+      report "Not reachable"
+      severity failure;
+
+  end procedure vga_save_frame;
+
+  attribute foreign of vga_cycle      : procedure is "VHPIDIRECT vga_cycle";
+  attribute foreign of vga_save_frame : procedure is "VHPIDIRECT vga_save_frame";
 
 begin
 
@@ -77,6 +103,23 @@ begin
       sram_data_o => sram_data_rd,
       sram_we_i   => sram_we
     );
+
+  vga_capture_p : process (clk_vga) is
+  begin
+
+    if (rst = '0') then
+      vga_vs_d <= '0';
+    elsif rising_edge(clk_vga) then
+      if (vga_blank_n = '1') then
+        vga_cycle(vga_r, vga_g, vga_b);
+      end if;
+      if (vga_vs = '1' and vga_vs_d = '0') then
+        vga_save_frame;
+      end if;
+      vga_vs_d <= vga_vs;
+    end if;
+
+  end process vga_capture_p;
 
   stimulus_p : process is
   begin
