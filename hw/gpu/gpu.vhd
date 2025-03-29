@@ -6,8 +6,9 @@ library ieee;
 entity gpu is
   port (
     clk_sys_i : in    std_logic;
+    rst_sys_i : in    std_logic;
     clk_vga_i : in    std_logic;
-    rst_i     : in    std_logic;
+    rst_vga_i : in    std_logic;
 
     vga_hs_o     : out   std_logic;
     vga_vs_o     : out   std_logic;
@@ -78,7 +79,7 @@ begin
   u_vga : entity work.vga
     port map (
       clk_i => clk_vga_i,
-      rst_i => rst_i,
+      rst_i => rst_vga_i,
 
       sync_frame_start_i => vga_fifo_new_frame_out,
 
@@ -104,11 +105,11 @@ begin
       rdempty => vga_fifo_read_empty
     );
 
-  vga_fifo_pusher_p : process (clk_sys_i, rst_i) is
+  vga_fifo_pusher_p : process (clk_sys_i, rst_sys_i) is
   begin
 
     if rising_edge(clk_sys_i) then
-      if (rst_i = '1') then
+      if (rst_sys_i = '1') then
         vga_fifo_put           <= '0';
         vga_fifo_feed_cursor_x <= (others => '0');
         vga_fifo_feed_cursor_y <= (others => '0');

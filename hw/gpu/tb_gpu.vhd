@@ -13,9 +13,10 @@ architecture behave of tb_gpu is
   constant clk_vga_period : time := 39.72194638 ns; -- 25.175 MHz
   constant clk_sys_period : time := 10          ns; -- 100    MHz
 
-  signal clk_vga : std_logic := '0';
   signal clk_sys : std_logic := '0';
-  signal rst     : std_logic;
+  signal rst_sys : std_logic := '1';
+  signal clk_vga : std_logic := '0';
+  signal rst_vga : std_logic := '1';
 
   signal vga_hs      : std_logic;
   signal vga_vs      : std_logic;
@@ -64,8 +65,9 @@ begin
   u_gpu : entity work.gpu
     port map (
       clk_sys_i => clk_sys,
+      rst_sys_i => rst_sys,
       clk_vga_i => clk_vga,
-      rst_i     => rst,
+      rst_vga_i => rst_vga,
 
       vga_hs_o     => vga_hs,
       vga_vs_o     => vga_vs,
@@ -84,7 +86,7 @@ begin
   u_sim_vga : entity work.sim_vga
     port map (
       clk_i => clk_vga,
-      rst_i => rst,
+      rst_i => rst_vga,
 
       vga_hs_i => vga_hs,
       vga_vs_i => vga_vs,
@@ -96,7 +98,7 @@ begin
   u_sim_sram : entity work.sim_sram
     port map (
       clk_i => clk_sys,
-      rst_i => rst,
+      rst_i => rst_sys,
 
       sram_addr_i => sram_addr,
       sram_data_i => sram_data_wr,
@@ -108,7 +110,7 @@ begin
   begin
 
     if rising_edge(clk_vga) then
-      if (rst = '1') then
+      if (rst_vga = '1') then
         vga_vs_d <= '0';
       else
         if (vga_blank_n = '1') then
@@ -126,11 +128,14 @@ begin
   stimulus_p : process is
   begin
 
-    rst <= '1';
+    rst_vga <= '1';
+    rst_sys <= '1';
+    wait until rising_edge(clk_sys);
+    wait until rising_edge(clk_sys);
+    rst_sys <= '0';
     wait until rising_edge(clk_vga);
     wait until rising_edge(clk_vga);
-    rst <= '0';
-    wait until rising_edge(clk_vga);
+    rst_vga <= '0';
 
     wait until rising_edge(vga_vs);
     wait until rising_edge(vga_vs);
