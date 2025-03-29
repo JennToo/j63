@@ -51,7 +51,7 @@ ENTITY vga_fb_fifo IS
 		q		: OUT STD_LOGIC_VECTOR (17 DOWNTO 0);
 		rdempty		: OUT STD_LOGIC ;
 		wrfull		: OUT STD_LOGIC ;
-		wrusedw		: OUT STD_LOGIC_VECTOR (6 DOWNTO 0)
+		wrusedw		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
 	);
 END vga_fb_fifo;
 
@@ -61,12 +61,13 @@ ARCHITECTURE SYN OF vga_fb_fifo IS
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (17 DOWNTO 0);
 	SIGNAL sub_wire1	: STD_LOGIC ;
 	SIGNAL sub_wire2	: STD_LOGIC ;
-	SIGNAL sub_wire3	: STD_LOGIC_VECTOR (6 DOWNTO 0);
+	SIGNAL sub_wire3	: STD_LOGIC_VECTOR (7 DOWNTO 0);
 
 
 
 	COMPONENT dcfifo
 	GENERIC (
+		add_usedw_msb_bit		: STRING;
 		intended_device_family		: STRING;
 		lpm_numwords		: NATURAL;
 		lpm_showahead		: STRING;
@@ -88,7 +89,7 @@ ARCHITECTURE SYN OF vga_fb_fifo IS
 			q	: OUT STD_LOGIC_VECTOR (17 DOWNTO 0);
 			rdempty	: OUT STD_LOGIC ;
 			wrfull	: OUT STD_LOGIC ;
-			wrusedw	: OUT STD_LOGIC_VECTOR (6 DOWNTO 0)
+			wrusedw	: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
 	);
 	END COMPONENT;
 
@@ -96,16 +97,17 @@ BEGIN
 	q    <= sub_wire0(17 DOWNTO 0);
 	rdempty    <= sub_wire1;
 	wrfull    <= sub_wire2;
-	wrusedw    <= sub_wire3(6 DOWNTO 0);
+	wrusedw    <= sub_wire3(7 DOWNTO 0);
 
 	dcfifo_component : dcfifo
 	GENERIC MAP (
+		add_usedw_msb_bit => "ON",
 		intended_device_family => "Cyclone IV E",
 		lpm_numwords => 128,
 		lpm_showahead => "ON",
 		lpm_type => "dcfifo",
 		lpm_width => 18,
-		lpm_widthu => 7,
+		lpm_widthu => 8,
 		overflow_checking => "OFF",
 		rdsync_delaypipe => 5,
 		underflow_checking => "OFF",
@@ -153,7 +155,7 @@ END SYN;
 -- Retrieval info: PRIVATE: Width NUMERIC "18"
 -- Retrieval info: PRIVATE: dc_aclr NUMERIC "0"
 -- Retrieval info: PRIVATE: diff_widths NUMERIC "0"
--- Retrieval info: PRIVATE: msb_usedw NUMERIC "0"
+-- Retrieval info: PRIVATE: msb_usedw NUMERIC "1"
 -- Retrieval info: PRIVATE: output_width NUMERIC "18"
 -- Retrieval info: PRIVATE: rsEmpty NUMERIC "1"
 -- Retrieval info: PRIVATE: rsFull NUMERIC "0"
@@ -164,12 +166,13 @@ END SYN;
 -- Retrieval info: PRIVATE: wsFull NUMERIC "1"
 -- Retrieval info: PRIVATE: wsUsedW NUMERIC "1"
 -- Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
+-- Retrieval info: CONSTANT: ADD_USEDW_MSB_BIT STRING "ON"
 -- Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
 -- Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "128"
 -- Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "ON"
 -- Retrieval info: CONSTANT: LPM_TYPE STRING "dcfifo"
 -- Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "18"
--- Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "7"
+-- Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "8"
 -- Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "OFF"
 -- Retrieval info: CONSTANT: RDSYNC_DELAYPIPE NUMERIC "5"
 -- Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "OFF"
@@ -183,7 +186,7 @@ END SYN;
 -- Retrieval info: USED_PORT: wrclk 0 0 0 0 INPUT NODEFVAL "wrclk"
 -- Retrieval info: USED_PORT: wrfull 0 0 0 0 OUTPUT NODEFVAL "wrfull"
 -- Retrieval info: USED_PORT: wrreq 0 0 0 0 INPUT NODEFVAL "wrreq"
--- Retrieval info: USED_PORT: wrusedw 0 0 7 0 OUTPUT NODEFVAL "wrusedw[6..0]"
+-- Retrieval info: USED_PORT: wrusedw 0 0 8 0 OUTPUT NODEFVAL "wrusedw[7..0]"
 -- Retrieval info: CONNECT: @data 0 0 18 0 data 0 0 18 0
 -- Retrieval info: CONNECT: @rdclk 0 0 0 0 rdclk 0 0 0 0
 -- Retrieval info: CONNECT: @rdreq 0 0 0 0 rdreq 0 0 0 0
@@ -192,7 +195,7 @@ END SYN;
 -- Retrieval info: CONNECT: q 0 0 18 0 @q 0 0 18 0
 -- Retrieval info: CONNECT: rdempty 0 0 0 0 @rdempty 0 0 0 0
 -- Retrieval info: CONNECT: wrfull 0 0 0 0 @wrfull 0 0 0 0
--- Retrieval info: CONNECT: wrusedw 0 0 7 0 @wrusedw 0 0 7 0
+-- Retrieval info: CONNECT: wrusedw 0 0 8 0 @wrusedw 0 0 8 0
 -- Retrieval info: GEN_FILE: TYPE_NORMAL vga_fb_fifo.vhd TRUE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL vga_fb_fifo.inc FALSE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL vga_fb_fifo.cmp FALSE

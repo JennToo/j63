@@ -158,9 +158,20 @@ architecture rtl of j63_toplevel is
   signal vga_hs_s : std_logic;
   signal vga_vs_s : std_logic;
 
-  signal sram_we_i      : std_logic;
-  signal sram_data_wr_i : std_logic_vector(15 downto 0);
-  signal sram_data_rd_i : std_logic_vector(15 downto 0);
+  signal sram_we      : std_logic;
+  signal sram_data_wr : std_logic_vector(15 downto 0);
+  signal sram_data_rd : std_logic_vector(15 downto 0);
+
+  signal vram_wb_cyc    : std_logic;
+  signal vram_wb_dat    : std_logic_vector(15 downto 0);
+  signal vram_wb_dat_rd : std_logic_vector(15 downto 0);
+  signal vram_wb_dat_wr : std_logic_vector(15 downto 0);
+  signal vram_wb_ack    : std_logic;
+  signal vram_wb_addr   : std_logic_vector(19 downto 0);
+  signal vram_wb_stall  : std_logic;
+  signal vram_wb_sel    : std_logic_vector(1 downto 0);
+  signal vram_wb_stb    : std_logic;
+  signal vram_wb_we     : std_logic;
 
 begin
 
@@ -201,20 +212,51 @@ begin
       vga_g_o      => vga_g_o,
       vga_b_o      => vga_b_o,
 
-      sram_addr_o => sram_addr_o,
-      sram_data_o => sram_data_wr_i,
-      sram_data_i => sram_data_rd_i,
-      sram_we_o   => sram_we_i
+      vram_wb_cyc_o   => vram_wb_cyc,
+      vram_wb_dat_i   => vram_wb_dat_rd,
+      vram_wb_dat_o   => vram_wb_dat_wr,
+      vram_wb_ack_i   => vram_wb_ack,
+      vram_wb_addr_o  => vram_wb_addr,
+      vram_wb_stall_i => vram_wb_stall,
+      vram_wb_sel_o   => vram_wb_sel,
+      vram_wb_stb_o   => vram_wb_stb,
+      vram_wb_we_o    => vram_wb_we
     );
 
-  sram_data_rd_i <= sram_dq_io;
-  sram_dq_io     <= sram_data_wr_i when sram_we_i = '1' else
-                    (others => 'Z');
-  sram_ce_no     <= '0';
-  sram_lb_no     <= '0';
-  sram_ub_no     <= '0';
-  sram_we_no     <= not sram_we_i;
-  sram_oe_no     <= '0';
+  u_wb_vram : entity work.wb_sram
+    generic map (
+      addr_width => 20,
+      data_width => 16
+    )
+    port map (
+      clk_i => clk_sys,
+      rst_i => rst_sys,
+
+      wb_cyc_i   => vram_wb_cyc,
+      wb_dat_i   => vram_wb_dat_wr,
+      wb_dat_o   => vram_wb_dat_rd,
+      wb_ack_o   => vram_wb_ack,
+      wb_addr_i  => vram_wb_addr,
+      wb_stall_o => vram_wb_stall,
+      wb_sel_i   => vram_wb_sel,
+      wb_stb_i   => vram_wb_stb,
+      wb_we_i    => vram_wb_we,
+
+      sram_addr_o => sram_addr_o,
+      sram_dat_o  => sram_data_wr,
+      sram_dat_i  => sram_data_rd,
+      sram_sel_o  => open,
+      sram_we_o   => sram_we
+    );
+
+  sram_data_rd <= sram_dq_io;
+  sram_dq_io   <= sram_data_wr when sram_we = '1' else
+                  (others => 'Z');
+  sram_ce_no   <= '0';
+  sram_lb_no   <= '0';
+  sram_ub_no   <= '0';
+  sram_we_no   <= not sram_we;
+  sram_oe_no   <= '0';
 
   -- TODO: Create a reset generator for startup
   rst_vga <= '0';

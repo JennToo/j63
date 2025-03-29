@@ -1,66 +1,105 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Mar  9 22:58:41 2025
+[*] Sat Mar 29 23:13:04 2025
 [*]
 [dumpfile] "/home/jwilcox/repo/j63/build/j63_nvc/tb_gpu.fst"
-[dumpfile_mtime] "Sun Mar  9 22:46:25 2025"
-[dumpfile_size] 13189452
+[dumpfile_mtime] "Sat Mar 29 23:11:16 2025"
+[dumpfile_size] 19738175
 [savefile] "/home/jwilcox/repo/j63/hw/gpu/tb_gpu.gtkw"
-[timestart] 5650120000000
-[size] 1920 1042
+[timestart] 0
+[size] 1920 1013
 [pos] -1 -1
-*-27.776857 5651555000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-42.867466 18183257027771 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_gpu.
 [treeopen] tb_gpu.u_gpu.
-[sst_width] 343
-[signals_width] 283
+[sst_width] 356
+[signals_width] 261
 [sst_expanded] 1
-[sst_vpaned_height] 513
+[sst_vpaned_height] 386
 @28
 tb_gpu.clk_sys
 tb_gpu.clk_vga
-tb_gpu.arst
-@200
--
-@28
-tb_gpu.vga_hs
-tb_gpu.vga_vs
-@24
-[color] 1
-tb_gpu.vga_r[7:0]
-[color] 4
-tb_gpu.vga_g[7:0]
-[color] 5
-tb_gpu.vga_b[7:0]
-@28
-tb_gpu.u_gpu.vga_hblank
-tb_gpu.u_gpu.vga_vblank
-@200
--
-@28
-tb_gpu.u_gpu.vga_fifo_put
-tb_gpu.u_gpu.vga_fifo_take
-@24
-tb_gpu.u_gpu.vga_fifo_write_count[6:0]
-@28
-tb_gpu.u_gpu.vga_fifo_write_full
-tb_gpu.u_gpu.vga_fifo_write_half_full
-tb_gpu.u_gpu.vga_fifo_read_empty
-@22
-tb_gpu.u_gpu.vga_fifo_data_in[17:0]
-tb_gpu.u_gpu.vga_fifo_data_out[17:0]
-@28
-tb_gpu.u_gpu.vga_fifo_new_line_in
-tb_gpu.u_gpu.vga_fifo_new_line_out
-tb_gpu.u_gpu.vga_fifo_new_frame_in
-tb_gpu.u_gpu.vga_fifo_new_frame_out
+tb_gpu.rst_sys
+tb_gpu.rst_vga
 @200
 -
 @22
 tb_gpu.sram_addr[19:0]
 tb_gpu.sram_data_rd[15:0]
 tb_gpu.sram_data_wr[15:0]
-@29
+@28
 tb_gpu.sram_we
+@200
+-
+@22
+tb_gpu.vga_r[7:0]
+tb_gpu.vga_g[7:0]
+tb_gpu.vga_b[7:0]
+@28
+tb_gpu.u_gpu.vga_hblank
+tb_gpu.u_gpu.vga_vblank
+tb_gpu.u_gpu.fifo_new_frame_out
+tb_gpu.u_gpu.fifo_new_line_out
+tb_gpu.u_gpu.fifo_new_line_in
+@29
+tb_gpu.u_gpu.fifo_new_frame_in
+@200
+-
+@28
+tb_gpu.u_gpu.u_vram_arbiter.a_active
+@22
+tb_gpu.u_gpu.fb_cursor_y[7:0]
+tb_gpu.u_gpu.fifo_dma_addr[19:0]
+@28
+tb_gpu.u_gpu.fifo_dma_done
+tb_gpu.u_gpu.fifo_dma_start
+tb_gpu.u_gpu.fifo_dma_wb_ack
+@22
+tb_gpu.u_gpu.fifo_dma_wb_addr[19:0]
+@28
+tb_gpu.u_gpu.fifo_dma_wb_cyc
+@22
+tb_gpu.u_gpu.fifo_dma_wb_dat_rd[15:0]
+tb_gpu.u_gpu.fifo_dma_wb_dat_wr[15:0]
+@28
+tb_gpu.u_gpu.fifo_dma_wb_sel[1:0]
+tb_gpu.u_gpu.fifo_dma_wb_stall
+tb_gpu.u_gpu.fifo_dma_wb_stb
+tb_gpu.u_gpu.fifo_dma_wb_we
+@200
+-
+@28
+tb_gpu.u_gpu.vram_wb_ack_i
+@22
+tb_gpu.u_gpu.vram_wb_addr_o[19:0]
+@28
+tb_gpu.u_gpu.vram_wb_cyc_o
+@22
+tb_gpu.u_gpu.vram_wb_dat_i[15:0]
+tb_gpu.u_gpu.vram_wb_dat_o[15:0]
+@28
+tb_gpu.u_gpu.vram_wb_sel_o[1:0]
+tb_gpu.u_gpu.vram_wb_stall_i
+tb_gpu.u_gpu.vram_wb_stb_o
+tb_gpu.u_gpu.vram_wb_we_o
+@200
+-
+@28
+tb_gpu.u_gpu.fifo_put
+tb_gpu.u_gpu.fifo_take
+@22
+tb_gpu.u_gpu.fifo_data_in[17:0]
+tb_gpu.u_gpu.fifo_data_out[17:0]
+@200
+-
+@28
+tb_gpu.u_gpu.u_vga_fifo.wrfull
+@22
+tb_gpu.u_gpu.u_fifo_dma.room_in_fifo[7:0]
+@24
+tb_gpu.u_gpu.u_fifo_dma.fifo_cnt_i[7:0]
+@22
+tb_gpu.u_gpu.u_fifo_dma.outstanding_requests[7:0]
+tb_gpu.u_gpu.u_fifo_dma.words_remaining[19:0]
 [pattern_trace] 1
 [pattern_trace] 0

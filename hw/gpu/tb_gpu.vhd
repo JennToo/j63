@@ -32,6 +32,17 @@ architecture behave of tb_gpu is
   signal sram_data_rd : std_logic_vector(15 downto 0);
   signal sram_we      : std_logic;
 
+  signal vram_wb_cyc    : std_logic;
+  signal vram_wb_dat    : std_logic_vector(15 downto 0);
+  signal vram_wb_dat_rd : std_logic_vector(15 downto 0);
+  signal vram_wb_dat_wr : std_logic_vector(15 downto 0);
+  signal vram_wb_ack    : std_logic;
+  signal vram_wb_addr   : std_logic_vector(19 downto 0);
+  signal vram_wb_stall  : std_logic;
+  signal vram_wb_sel    : std_logic_vector(1 downto 0);
+  signal vram_wb_stb    : std_logic;
+  signal vram_wb_we     : std_logic;
+
   procedure vga_cycle (
     r : in std_logic_vector(7 downto 0);
     g : in std_logic_vector(7 downto 0);
@@ -77,9 +88,40 @@ begin
       vga_g_o      => vga_g,
       vga_b_o      => vga_b,
 
+      vram_wb_cyc_o   => vram_wb_cyc,
+      vram_wb_dat_i   => vram_wb_dat_rd,
+      vram_wb_dat_o   => vram_wb_dat_wr,
+      vram_wb_ack_i   => vram_wb_ack,
+      vram_wb_addr_o  => vram_wb_addr,
+      vram_wb_stall_i => vram_wb_stall,
+      vram_wb_sel_o   => vram_wb_sel,
+      vram_wb_stb_o   => vram_wb_stb,
+      vram_wb_we_o    => vram_wb_we
+    );
+
+  u_wb_vram : entity work.wb_sram
+    generic map (
+      addr_width => 20,
+      data_width => 16
+    )
+    port map (
+      clk_i => clk_sys,
+      rst_i => rst_sys,
+
+      wb_cyc_i   => vram_wb_cyc,
+      wb_dat_i   => vram_wb_dat_wr,
+      wb_dat_o   => vram_wb_dat_rd,
+      wb_ack_o   => vram_wb_ack,
+      wb_addr_i  => vram_wb_addr,
+      wb_stall_o => vram_wb_stall,
+      wb_sel_i   => vram_wb_sel,
+      wb_stb_i   => vram_wb_stb,
+      wb_we_i    => vram_wb_we,
+
       sram_addr_o => sram_addr,
-      sram_data_o => sram_data_wr,
-      sram_data_i => sram_data_rd,
+      sram_dat_o  => sram_data_wr,
+      sram_dat_i  => sram_data_rd,
+      sram_sel_o  => open,
       sram_we_o   => sram_we
     );
 
@@ -137,9 +179,10 @@ begin
     wait until rising_edge(clk_vga);
     rst_vga <= '0';
 
-    wait until rising_edge(vga_vs);
-    wait until rising_edge(vga_vs);
-    wait until rising_edge(vga_vs);
+    wait until rising_edge(vga_vs) for clk_vga_period * 640 * 480 * 2;
+    wait until rising_edge(vga_vs) for clk_vga_period * 640 * 480 * 2;
+    wait until rising_edge(vga_vs) for clk_vga_period * 640 * 480 * 2;
+    wait until rising_edge(vga_vs) for clk_vga_period * 640 * 480 * 2;
 
     finish;
 

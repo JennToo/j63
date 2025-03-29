@@ -1,5 +1,6 @@
 library ieee;
   use ieee.std_logic_1164.all;
+  use ieee.numeric_std.all;
   use work.math_pkg.all;
 
 package gpu_pkg is
@@ -12,6 +13,11 @@ package gpu_pkg is
   constant fb_height       : natural := 240;
   constant fb_width_log2   : natural := clog2(fb_width);
   constant fb_height_log2  : natural := clog2(fb_height);
+  constant fb_frame        : natural := fb_width * fb_height;
+
+  constant fb_frame_addr_0 : unsigned(19 downto 0) := 20x"0";
+  constant fb_frame_addr_1 : unsigned(19 downto 0) := fb_frame_addr_0 + fb_frame;
+  constant fb_zbuf_addr    : unsigned(19 downto 0) := fb_frame_addr_1 + fb_frame;
 
   type pixel_t is record
     red   : std_logic_vector(4 downto 0);

@@ -65,23 +65,24 @@ begin
   request_accepted <= '1' when wb_stb_o = '1' and wb_stall_i = '0' else
                       '0';
 
-  dma_done_o <= '1' when words_remaining = d"0" and outstanding_requests = d"0" else
+  dma_done_o <= '1' when words_remaining = 0 and outstanding_requests = 0  and dma_start_i = '0' else
                 '0';
 
   -- When we receive the data, give it to the FIFO
   fifo_data_o       <= wb_dat_i;
   fifo_put_o        <= wb_ack_i;
   fifo_cnt_unsigned <= unsigned(fifo_cnt_i);
-  room_in_fifo      <= fifo_cnt_max - fifo_cnt_unsigned;
+  room_in_fifo      <= fifo_cnt_max - fifo_cnt_unsigned - 1 when fifo_cnt_max > fifo_cnt_unsigned else
+                       to_unsigned(0, fifo_cnt_width);
 
   dma_p : process (clk_i, rst_i) is
   begin
 
     if rising_edge(clk_i) then
       if (rst_i = '1') then
-        outstanding_requests <= d"0";
-        cursor               <= d"0";
-        words_remaining      <= d"0";
+        outstanding_requests <= (others => '0');
+        cursor               <= (others => '0');
+        words_remaining      <= (others => '0');
       else
         if (dma_start_i = '1') then
           cursor          <= unsigned(dma_addr_i);

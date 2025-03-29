@@ -28,11 +28,11 @@ entity vga is
     pixel_i : in    wide_pixel_t;
     pixel_o : out   wide_pixel_t;
 
-    sync_frame_start_i : in    std_logic;
-    hsync_o            : out   std_logic;
-    vsync_o            : out   std_logic;
-    hblank_o           : out   std_logic;
-    vblank_o           : out   std_logic
+    start_of_frame_o : out   std_logic;
+    hsync_o          : out   std_logic;
+    vsync_o          : out   std_logic;
+    hblank_o         : out   std_logic;
+    vblank_o         : out   std_logic
   );
 end entity vga;
 
@@ -55,15 +55,17 @@ architecture rtl of vga is
 
 begin
 
-  hblank_o    <= '1' when htimer < hblank_region else
-                 '0';
-  vblank_o    <= '1' when vtimer < vblank_region else
-                 '0';
-  black.red   <= (others => '0');
-  black.green <= (others => '0');
-  black.blue  <= (others => '0');
-  pixel_o     <= pixel_i when hblank_o = '0' and vblank_o = '0' else
-                 black;
+  hblank_o         <= '1' when htimer < hblank_region else
+                      '0';
+  vblank_o         <= '1' when vtimer < vblank_region else
+                      '0';
+  start_of_frame_o <= '1' when htimer = hblank_region and vtimer = vblank_region else
+                      '0';
+  black.red        <= (others => '0');
+  black.green      <= (others => '0');
+  black.blue       <= (others => '0');
+  pixel_o          <= pixel_i when hblank_o = '0' and vblank_o = '0' else
+                      black;
 
   hsync_o <= not hsync_polarity when htimer >= hsync_front_porch and
                                      htimer < hsync_front_porch + hsync_sync_pulse else
@@ -80,19 +82,14 @@ begin
         htimer <= to_unsigned(0, htimer_width);
         vtimer <= to_unsigned(0, vtimer_width);
       else
-        if (sync_frame_start_i = '1') then
-          htimer <= to_unsigned(0, htimer_width);
-          vtimer <= to_unsigned(0, vtimer_width);
+        if (htimer < hmax - 1) then
+          htimer <= htimer + 1;
         else
-          if (htimer < hmax - 1) then
-            htimer <= htimer + 1;
+          htimer <= to_unsigned(0, htimer_width);
+          if (vtimer < vmax - 1) then
+            vtimer <= vtimer + 1;
           else
-            htimer <= to_unsigned(0, htimer_width);
-            if (vtimer < vmax - 1) then
-              vtimer <= vtimer + 1;
-            else
-              vtimer <= to_unsigned(0, vtimer_width);
-            end if;
+            vtimer <= to_unsigned(0, vtimer_width);
           end if;
         end if;
       end if;
