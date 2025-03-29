@@ -107,32 +107,34 @@ begin
   vga_fifo_pusher_p : process (clk_sys_i, rst_i) is
   begin
 
-    if (rst_i = '0') then
-      vga_fifo_put           <= '0';
-      vga_fifo_feed_cursor_x <= (others => '0');
-      vga_fifo_feed_cursor_y <= (others => '0');
-      vga_fifo_new_line_in   <= '1';
-      vga_fifo_new_frame_in  <= '1';
-    elsif rising_edge(clk_sys_i) then
-      vga_fifo_put <= '0';
-      -- TODO: A better strategy may be hysterisys. Wait until FIFO is at half
-      --       capacity, and then burst up to full in low-priority mode once
-      --       over half. This allows the FIFO feeder to soak up unused SRAM BW
-      if (vga_fifo_write_half_full = '0') then
-        vga_fifo_put          <= '1';
-        vga_fifo_new_line_in  <= '0';
-        vga_fifo_new_frame_in <= '0';
-        if (vga_fifo_feed_cursor_x < vga_width - 1) then
-          vga_fifo_feed_cursor_x <= vga_fifo_feed_cursor_x + 1;
-        else
-          vga_fifo_feed_cursor_x <= (others => '0');
-          vga_fifo_new_line_in   <= '1';
-
-          if (vga_fifo_feed_cursor_y < vga_height - 1) then
-            vga_fifo_feed_cursor_y <= vga_fifo_feed_cursor_y + 1;
+    if rising_edge(clk_sys_i) then
+      if (rst_i = '1') then
+        vga_fifo_put           <= '0';
+        vga_fifo_feed_cursor_x <= (others => '0');
+        vga_fifo_feed_cursor_y <= (others => '0');
+        vga_fifo_new_line_in   <= '1';
+        vga_fifo_new_frame_in  <= '1';
+      else
+        vga_fifo_put <= '0';
+        -- TODO: A better strategy may be hysterisys. Wait until FIFO is at half
+        --       capacity, and then burst up to full in low-priority mode once
+        --       over half. This allows the FIFO feeder to soak up unused SRAM BW
+        if (vga_fifo_write_half_full = '0') then
+          vga_fifo_put          <= '1';
+          vga_fifo_new_line_in  <= '0';
+          vga_fifo_new_frame_in <= '0';
+          if (vga_fifo_feed_cursor_x < vga_width - 1) then
+            vga_fifo_feed_cursor_x <= vga_fifo_feed_cursor_x + 1;
           else
-            vga_fifo_feed_cursor_y <= (others => '0');
-            vga_fifo_new_frame_in  <= '1';
+            vga_fifo_feed_cursor_x <= (others => '0');
+            vga_fifo_new_line_in   <= '1';
+
+            if (vga_fifo_feed_cursor_y < vga_height - 1) then
+              vga_fifo_feed_cursor_y <= vga_fifo_feed_cursor_y + 1;
+            else
+              vga_fifo_feed_cursor_y <= (others => '0');
+              vga_fifo_new_frame_in  <= '1';
+            end if;
           end if;
         end if;
       end if;

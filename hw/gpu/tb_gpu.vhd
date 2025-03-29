@@ -107,16 +107,18 @@ begin
   vga_capture_p : process (clk_vga) is
   begin
 
-    if (rst = '0') then
-      vga_vs_d <= '0';
-    elsif rising_edge(clk_vga) then
-      if (vga_blank_n = '1') then
-        vga_cycle(vga_r, vga_g, vga_b);
+    if rising_edge(clk_vga) then
+      if (rst = '1') then
+        vga_vs_d <= '0';
+      else
+        if (vga_blank_n = '1') then
+          vga_cycle(vga_r, vga_g, vga_b);
+        end if;
+        if (vga_vs = '1' and vga_vs_d = '0') then
+          vga_save_frame;
+        end if;
+        vga_vs_d <= vga_vs;
       end if;
-      if (vga_vs = '1' and vga_vs_d = '0') then
-        vga_save_frame;
-      end if;
-      vga_vs_d <= vga_vs;
     end if;
 
   end process vga_capture_p;
@@ -124,9 +126,11 @@ begin
   stimulus_p : process is
   begin
 
-    rst <= '0';
-    wait for clk_sys_period;
     rst <= '1';
+    wait until rising_edge(clk_vga);
+    wait until rising_edge(clk_vga);
+    rst <= '0';
+    wait until rising_edge(clk_vga);
 
     wait until rising_edge(vga_vs);
     wait until rising_edge(vga_vs);

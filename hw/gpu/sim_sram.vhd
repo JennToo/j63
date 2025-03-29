@@ -27,13 +27,15 @@ begin
   rw_p : process (clk_i, rst_i) is
   begin
 
-    if (rst_i = '0') then
-      sram_data_o <= (others => '0');
-    elsif rising_edge(clk_i) then
-      if (sram_we_i = '1') then
-        memory(to_integer(unsigned(sram_addr_i))) <= sram_data_i;
+    if rising_edge(clk_i) then
+      if (rst_i = '1') then
+        sram_data_o <= (others => '0');
       else
-        sram_data_o <= memory(to_integer(unsigned(sram_addr_i)));
+        if (sram_we_i = '1') then
+          memory(to_integer(unsigned(sram_addr_i))) <= sram_data_i;
+        else
+          sram_data_o <= memory(to_integer(unsigned(sram_addr_i)));
+        end if;
       end if;
     end if;
 

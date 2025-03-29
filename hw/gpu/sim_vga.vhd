@@ -43,48 +43,50 @@ begin
 
   begin
 
-    if (rst_i = '0') then
-      vga_hs_d      <= '1';
-      vga_vs_d      <= '1';
-      seen_first_hs <= '0';
-      seen_first_vs <= '0';
-    elsif rising_edge(clk_i) then
-      if (vga_hs_i = '0' and vga_hs_d = '1') then
-        if (seen_first_hs = '0') then
-          seen_first_hs <= '1';
-        else
+    if rising_edge(clk_i) then
+      if (rst_i = '1') then
+        vga_hs_d      <= '1';
+        vga_vs_d      <= '1';
+        seen_first_hs <= '0';
+        seen_first_vs <= '0';
+      else
+        if (vga_hs_i = '0' and vga_hs_d = '1') then
+          if (seen_first_hs = '0') then
+            seen_first_hs <= '1';
+          else
+            time_difference := now - vga_hs_start;
+            assert time_equal_ish(time_difference, vga_line_len, epsilon)
+              report "Invalid HSYNC period " & time'image(time_difference)
+              severity error;
+          end if;
+          vga_hs_start <= now;
+        end if;
+        if (vga_hs_i = '1' and vga_hs_d = '0') then
           time_difference := now - vga_hs_start;
-          assert time_equal_ish(time_difference, vga_line_len, epsilon)
-            report "Invalid HSYNC period " & time'image(time_difference)
+          assert time_equal_ish(time_difference, vga_hs_pulse, epsilon)
+            report "Invalid HSYNC pulse length " & time'image(time_difference)
             severity error;
         end if;
-        vga_hs_start <= now;
-      end if;
-      if (vga_hs_i = '1' and vga_hs_d = '0') then
-        time_difference := now - vga_hs_start;
-        assert time_equal_ish(time_difference, vga_hs_pulse, epsilon)
-          report "Invalid HSYNC pulse length " & time'image(time_difference)
-          severity error;
-      end if;
-      if (vga_vs_i = '0' and vga_vs_d = '1') then
-        if (seen_first_vs = '0') then
-          seen_first_vs <= '1';
-        else
+        if (vga_vs_i = '0' and vga_vs_d = '1') then
+          if (seen_first_vs = '0') then
+            seen_first_vs <= '1';
+          else
+            time_difference := now - vga_vs_start;
+            assert time_equal_ish(time_difference, vga_frame_len, epsilon)
+              report "Invalid VSYNC period " & time'image(time_difference)
+              severity error;
+          end if;
+          vga_vs_start <= now;
+        end if;
+        if (vga_vs_i = '1' and vga_vs_d = '0') then
           time_difference := now - vga_vs_start;
-          assert time_equal_ish(time_difference, vga_frame_len, epsilon)
-            report "Invalid VSYNC period " & time'image(time_difference)
+          assert time_equal_ish(time_difference, vga_vs_pulse, epsilon)
+            report "Invalid VSYNC pulse length " & time'image(time_difference)
             severity error;
         end if;
-        vga_vs_start <= now;
+        vga_hs_d <= vga_hs_i;
+        vga_vs_d <= vga_vs_i;
       end if;
-      if (vga_vs_i = '1' and vga_vs_d = '0') then
-        time_difference := now - vga_vs_start;
-        assert time_equal_ish(time_difference, vga_vs_pulse, epsilon)
-          report "Invalid VSYNC pulse length " & time'image(time_difference)
-          severity error;
-      end if;
-      vga_hs_d <= vga_hs_i;
-      vga_vs_d <= vga_vs_i;
     end if;
 
   end process sync_verification_p;

@@ -60,7 +60,8 @@ begin
   wb_addr_o        <= std_logic_vector(cursor);
   wb_stb_o         <= '1' when words_remaining > 0 and outstanding_requests < room_in_fifo else
                       '0';
-  wb_cyc_o         <= wb_stb_o;
+  wb_cyc_o         <= '1' when wb_stb_o = '1' or outstanding_requests > 0 else
+                      '0';
   request_accepted <= '1' when wb_stb_o = '1' and wb_stall_i = '0' else
                       '0';
 
@@ -76,25 +77,27 @@ begin
   dma_p : process (clk_i, rst_i) is
   begin
 
-    if (rst_i = '0') then
-      outstanding_requests <= d"0";
-      cursor               <= d"0";
-      words_remaining      <= d"0";
-    elsif rising_edge(clk_i) then
-      if (dma_start_i = '1') then
-        cursor          <= unsigned(dma_addr_i);
-        words_remaining <= unsigned(dma_word_cnt_i);
-      end if;
-
-      if (request_accepted = '1') then
-        if (wb_ack_i = '0') then
-          outstanding_requests <= outstanding_requests + 1;
-        end if;
-        cursor          <= cursor + 1;
-        words_remaining <= words_remaining - 1;
+    if rising_edge(clk_i) then
+      if (rst_i = '1') then
+        outstanding_requests <= d"0";
+        cursor               <= d"0";
+        words_remaining      <= d"0";
       else
-        if (wb_ack_i = '1') then
-          outstanding_requests <= outstanding_requests - 1;
+        if (dma_start_i = '1') then
+          cursor          <= unsigned(dma_addr_i);
+          words_remaining <= unsigned(dma_word_cnt_i);
+        end if;
+
+        if (request_accepted = '1') then
+          if (wb_ack_i = '0') then
+            outstanding_requests <= outstanding_requests + 1;
+          end if;
+          cursor          <= cursor + 1;
+          words_remaining <= words_remaining - 1;
+        else
+          if (wb_ack_i = '1') then
+            outstanding_requests <= outstanding_requests - 1;
+          end if;
         end if;
       end if;
     end if;

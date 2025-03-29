@@ -153,7 +153,7 @@ architecture rtl of j63_toplevel is
 
   signal clk_sys  : std_logic;
   signal clk_vga  : std_logic;
-  signal rst_i    : std_logic;
+  signal rst      : std_logic;
   signal vga_hs_s : std_logic;
   signal vga_vs_s : std_logic;
 
@@ -189,7 +189,7 @@ begin
     port map (
       clk_sys_i => clk_sys,
       clk_vga_i => clk_vga,
-      rst_i     => rst_i,
+      rst_i     => rst,
 
       vga_hs_o     => vga_hs_s,
       vga_vs_o     => vga_vs_s,
@@ -215,7 +215,7 @@ begin
   sram_oe_no     <= '0';
 
   -- TODO: Create a reset generator for startup
-  rst_i <= '1';
+  rst <= '0';
 
   ledg_o <= "010101100";
   hex0_o <= (others => '1');

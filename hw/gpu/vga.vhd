@@ -75,22 +75,24 @@ begin
   timers_p : process (clk_i, rst_i) is
   begin
 
-    if (rst_i = '0') then
-      htimer <= to_unsigned(0, htimer_width);
-      vtimer <= to_unsigned(0, vtimer_width);
-    elsif rising_edge(clk_i) then
-      if (sync_frame_start_i = '1') then
+    if rising_edge(clk_i) then
+      if (rst_i = '1') then
         htimer <= to_unsigned(0, htimer_width);
         vtimer <= to_unsigned(0, vtimer_width);
       else
-        if (htimer < hmax - 1) then
-          htimer <= htimer + 1;
-        else
+        if (sync_frame_start_i = '1') then
           htimer <= to_unsigned(0, htimer_width);
-          if (vtimer < vmax - 1) then
-            vtimer <= vtimer + 1;
+          vtimer <= to_unsigned(0, vtimer_width);
+        else
+          if (htimer < hmax - 1) then
+            htimer <= htimer + 1;
           else
-            vtimer <= to_unsigned(0, vtimer_width);
+            htimer <= to_unsigned(0, htimer_width);
+            if (vtimer < vmax - 1) then
+              vtimer <= vtimer + 1;
+            else
+              vtimer <= to_unsigned(0, vtimer_width);
+            end if;
           end if;
         end if;
       end if;
