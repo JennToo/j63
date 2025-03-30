@@ -35,6 +35,7 @@ QUARTUS_PROJECT_FILES = [
 VHDL_SOURCES = [
     "hw/common/math_pkg.vhd",
     "hw/common/test_pkg.vhd",
+    "hw/debug/wb_debug.vhd",
     "hw/mem/wb_sram.vhd",
     "hw/mem/wb_dma_to_fifo.vhd",
     "hw/mem/wb_arbiter.vhd",
