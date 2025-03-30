@@ -35,6 +35,8 @@ QUARTUS_PROJECT_FILES = [
 VHDL_SOURCES = [
     "hw/common/math_pkg.vhd",
     "hw/common/test_pkg.vhd",
+    "hw/serial/uart_rx.vhd",
+    "hw/serial/tb_uart_rx.vhd",
     "hw/debug/wb_debug.vhd",
     "hw/mem/wb_sram.vhd",
     "hw/mem/wb_dma_to_fifo.vhd",
@@ -57,6 +59,7 @@ VSG_EXCLUDED = [
 ]
 VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
+    "hw/serial/tb_uart_rx.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/gpu/sim_vga.vhd",
     "hw/gpu/sim_sram.vhd",
@@ -201,6 +204,12 @@ def build_task_graph():
         run_args=["--load", "hw/gpu/gpu-cosim/target/release/libgpucosim.so"],
     )
     dependencies[gpu_sim_run_meta].append(gpu_cosim_meta)
+    define_simulation(
+        rule,
+        dependencies,
+        "tb_uart_rx",
+        run_args=[],
+    )
 
     for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES + SBY_FILES:
         rule(source, file_exists, [])
@@ -240,8 +249,9 @@ def define_simulation(rule, dependencies, name, run_args):
         lambda **kwargs: nvc_run(toplevel=name, run_args=run_args, **kwargs),
         [f"build/j63_nvc/meta-elab-{name}"],
     )
-    dependencies["build/j63_nvc/meta-run"].append(f"build/j63_nvc/meta-run-{name}")
+    dependencies["build/j63_nvc/meta-run"].append(run_meta)
     dependencies["build/j63_nvc/meta-elab"].append(f"build/j63_nvc/meta-elab-{name}")
+    rule(f"sim-{name}", nop, [run_meta])
     rule(
         f"waves-{name}",
         lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),

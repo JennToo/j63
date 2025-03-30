@@ -262,14 +262,29 @@ begin
   rst_vga <= '0';
   rst_sys <= '0';
 
-  ledg_o <= "010101100";
-  hex0_o <= (others => '1');
-  hex1_o <= (others => '1');
-  hex2_o <= (others => '1');
-  hex3_o <= (others => '1');
-  hex4_o <= (others => '1');
-  hex5_o <= (others => '1');
-  hex6_o <= (others => '1');
-  hex7_o <= (others => '1');
+  -- Temp hacks to test UART on hardware
+  u_uart_rx : entity work.uart_rx
+    generic map (
+      clk_period  => 10 ns,
+      baud_period => 4340 ns
+    )
+    port map (
+      clk_i => clk_sys,
+      rst_i => rst_sys,
+
+      uart_i       => uart_rxd_i,
+      data_o       => ledg_o(7 downto 0),
+      data_valid_o => open
+    );
+
+  ledg_o(8) <= '1';
+  hex0_o    <= (others => '1');
+  hex1_o    <= (others => '1');
+  hex2_o    <= (others => '1');
+  hex3_o    <= (others => '1');
+  hex4_o    <= (others => '1');
+  hex5_o    <= (others => '1');
+  hex6_o    <= (others => '1');
+  hex7_o    <= (others => '1');
 
 end architecture rtl;
