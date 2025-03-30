@@ -20,6 +20,10 @@ architecture behave of tb_uart_rx is
   signal data       : std_logic_vector(7 downto 0);
   signal data_valid : std_logic;
 
+  signal stored_data       : std_logic_vector(7 downto 0);
+  signal stored_data_valid : std_logic;
+  signal clear_stored_data : std_logic;
+
 begin
 
   u_uart_rx : entity work.uart_rx
@@ -38,8 +42,61 @@ begin
 
   clk <= not clk after clk_period / 2;
 
-  stimulus_p : process is
+  data_capture_p : process (clk) is
   begin
+
+    if rising_edge(clk) then
+      if (rst = '1') then
+        stored_data_valid <= '0';
+      else
+        if (data_valid = '1') then
+          stored_data       <= data;
+          stored_data_valid <= '1';
+        end if;
+        if (clear_stored_data = '1') then
+          stored_data_valid <= '0';
+          stored_data <= (others => 'U');
+        end if;
+      end if;
+    end if;
+
+  end process data_capture_p;
+
+  stimulus_p : process is
+
+    procedure uart_write (
+      constant byte : in std_logic_vector(7 downto 0)
+    ) is
+    begin
+        clear_stored_data <= '1';
+        wait until rising_edge(clk);
+        clear_stored_data <= '0';
+
+      -- Start bit
+      uart <= '0';
+      wait for baud_period;
+
+      -- Data
+      for i in 0 to 7 loop
+
+        uart <= byte(i);
+        wait for baud_period;
+
+      end loop;
+
+      -- Stop bit
+      uart <= '1';
+      wait for baud_period;
+
+      assert stored_data_valid = '1' severity failure;
+      assert stored_data = byte severity failure;
+
+    end procedure uart_write;
+
+  begin
+
+    clear_stored_data <= '0';
+    uart              <= '0';
 
     rst <= '1';
     wait until rising_edge(clk);
@@ -47,23 +104,13 @@ begin
     rst <= '0';
     wait until rising_edge(clk);
 
-    uart <= '0';
-    wait for baud_period;
-    uart <= '1';
-    wait for baud_period;
-    wait for baud_period;
-    uart <= '0';
-    wait for baud_period;
-    uart <= '1';
-    wait for baud_period;
-    uart <= '0';
-    wait for baud_period;
-    wait for baud_period;
-    uart <= '1';
-    wait for baud_period;
-    uart <= '0';
-    wait for baud_period;
-    uart <= '1';
+    uart_write(8x"6E");
+    uart_write(8x"AE");
+    wait for clk_period * 20;
+    uart_write(8x"9F");
+    uart_write(8x"00");
+    uart_write(8x"FF");
+
     wait for baud_period;
 
     finish;

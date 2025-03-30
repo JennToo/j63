@@ -1,0 +1,42 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Sun Mar 30 16:12:50 2025
+[*]
+[dumpfile] "/home/jwilcox/repo/j63/build/j63_nvc/tb_uart_rx.fst"
+[dumpfile_mtime] "Sun Mar 30 16:09:54 2025"
+[dumpfile_size] 1092
+[savefile] "/home/jwilcox/repo/j63/hw/serial/tb_uart_rx.gtkw"
+[timestart] 0
+[size] 1920 1013
+[pos] -1 -1
+*-32.571213 36950000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_uart_rx.
+[sst_width] 347
+[signals_width] 166
+[sst_expanded] 1
+[sst_vpaned_height] 386
+@28
+tb_uart_rx.clk
+tb_uart_rx.rst
+tb_uart_rx.uart
+@22
+tb_uart_rx.stored_data[7:0]
+@28
+tb_uart_rx.stored_data_valid
+@22
+tb_uart_rx.data[7:0]
+@28
+tb_uart_rx.data_valid
+@200
+-
+@28
+tb_uart_rx.u_uart_rx.state
+tb_uart_rx.u_uart_rx.bit_index[2:0]
+@22
+tb_uart_rx.u_uart_rx.baud_timer[7:0]
+@28
+tb_uart_rx.u_uart_rx.baud_periods[1:0]
+@29
+tb_uart_rx.u_uart_rx.ready
+[pattern_trace] 1
+[pattern_trace] 0
