@@ -55,7 +55,7 @@ begin
         end if;
         if (clear_stored_data = '1') then
           stored_data_valid <= '0';
-          stored_data <= (others => 'U');
+          stored_data       <= (others => 'U');
         end if;
       end if;
     end if;
@@ -68,9 +68,10 @@ begin
       constant byte : in std_logic_vector(7 downto 0)
     ) is
     begin
-        clear_stored_data <= '1';
-        wait until rising_edge(clk);
-        clear_stored_data <= '0';
+
+      clear_stored_data <= '1';
+      wait until rising_edge(clk);
+      clear_stored_data <= '0';
 
       -- Start bit
       uart <= '0';
@@ -88,8 +89,10 @@ begin
       uart <= '1';
       wait for baud_period;
 
-      assert stored_data_valid = '1' severity failure;
-      assert stored_data = byte severity failure;
+      assert stored_data_valid = '1'
+        severity failure;
+      assert stored_data = byte
+        severity failure;
 
     end procedure uart_write;
 

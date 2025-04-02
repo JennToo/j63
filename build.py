@@ -35,6 +35,8 @@ QUARTUS_PROJECT_FILES = [
 VHDL_SOURCES = [
     "hw/common/math_pkg.vhd",
     "hw/common/test_pkg.vhd",
+    "hw/common/sync_bit.vhd",
+    "hw/sys/reset_gen.vhd",
     "hw/serial/uart_rx.vhd",
     "hw/serial/tb_uart_rx.vhd",
     "hw/debug/wb_debug.vhd",

@@ -258,9 +258,14 @@ begin
   sram_we_no   <= not sram_we;
   sram_oe_no   <= '0';
 
-  -- TODO: Create a reset generator for startup
-  rst_vga <= '0';
-  rst_sys <= '0';
+  u_reset_gen : entity work.reset_gen
+    port map (
+      async_rst_ni => key_i(0),
+      clk_vga_i    => clk_vga,
+      clk_sys_i    => clk_sys,
+      rst_vga_o    => rst_vga,
+      rst_sys_o    => rst_sys
+    );
 
   -- Temp hacks to test UART on hardware
   u_uart_rx : entity work.uart_rx
@@ -277,7 +282,7 @@ begin
       data_valid_o => open
     );
 
-  ledg_o(8) <= '1';
+  ledg_o(8) <= key_i(0);
   hex0_o    <= (others => '1');
   hex1_o    <= (others => '1');
   hex2_o    <= (others => '1');
