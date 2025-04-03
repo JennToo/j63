@@ -22,6 +22,7 @@ class Tasks:
 
 PYTHON_SOURCES = [
     "build.py",
+    "tools/uart_debug.py",
 ]
 QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.qpf",

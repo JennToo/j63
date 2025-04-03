@@ -11,7 +11,7 @@ end entity tb_uart_rx;
 architecture behave of tb_uart_rx is
 
   constant clk_period  : time := 10 ns;   -- 100 MHz
-  constant baud_period : time := 4340 ns; -- 230400 kHz
+  constant baud_period : time := 4340 ns; -- 230.400 kHz
 
   signal clk : std_logic := '0';
   signal rst : std_logic := '1';

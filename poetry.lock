@@ -119,6 +119,20 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=8.3.2)", "pytest-
 type = ["mypy (>=1.11.2)"]
 
 [[package]]
+name = "pyserial"
+version = "3.5"
+description = "Python Serial Port Extension"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"},
+    {file = "pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb"},
+]
+
+[package.extras]
+cp2110 = ["hidapi"]
+
+[[package]]
 name = "pyyaml"
 version = "6.0.2"
 description = "YAML parser and emitter for Python"
@@ -220,28 +234,23 @@ files = [
 
 [[package]]
 name = "vsg"
-version = "3.30.0.post2+git.86d21756"
+version = "3.31.0"
 description = "VHDL Style Guide"
 optional = false
 python-versions = ">=3.8"
-files = []
-develop = false
+files = [
+    {file = "vsg-3.31.0-py3-none-any.whl", hash = "sha256:13c337f0742b34bc61882fbd7d58eb404621b9752105d52f8d7c51cb82175e66"},
+]
 
 [package.dependencies]
 PyYAML = ">=5.1"
 
 [package.extras]
 dev = ["pre-commit", "pylint"]
-docs = ["docutils", "readthedocs-sphinx-search", "sphinx", "sphinx_rtd_theme"]
+docs = ["docutils", "readthedocs-sphinx-search", "sphinx", "sphinx-rtd-theme"]
 tests = ["pytest", "pytest-cov", "pytest-html", "pytest-html-reporter", "pytest-xdist[psutil]"]
-
-[package.source]
-type = "git"
-url = "https://github.com/jeremiah-c-leary/vhdl-style-guide.git"
-reference = "HEAD"
-resolved_reference = "399ef069896313ead5b0a48b3e94f456ae718a33"
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f83f6701e373dc1636f7c84cceb3ca3c0a9a7a3b4d975f1a09700d5f7589df2e"
+content-hash = "e5acdcb9e82e858b782d87b131f26c990fe433f2bbee7c0fe7236ea33555b24d"
