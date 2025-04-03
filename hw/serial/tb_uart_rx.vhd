@@ -19,6 +19,7 @@ architecture behave of tb_uart_rx is
   signal uart       : std_logic := '1';
   signal data       : std_logic_vector(7 downto 0);
   signal data_valid : std_logic;
+  signal data_error : std_logic;
 
   signal stored_data       : std_logic_vector(7 downto 0);
   signal stored_data_valid : std_logic;
@@ -37,7 +38,8 @@ begin
 
       uart_i       => uart,
       data_o       => data,
-      data_valid_o => data_valid
+      data_valid_o => data_valid,
+      error_o      => data_error
     );
 
   clk <= not clk after clk_period / 2;
@@ -61,6 +63,19 @@ begin
     end if;
 
   end process data_capture_p;
+
+  error_watcher_p : process (clk) is
+  begin
+
+    if rising_edge(clk) then
+      if (rst = '0') then
+        assert data_error = '0'
+          report "Data error detected"
+          severity failure;
+      end if;
+    end if;
+
+  end process error_watcher_p;
 
   stimulus_p : process is
 
@@ -107,6 +122,8 @@ begin
     rst <= '0';
     wait until rising_edge(clk);
 
+    uart_write(8x"55");
+    uart_write(8x"AA");
     uart_write(8x"6E");
     uart_write(8x"AE");
     wait for clk_period * 20;

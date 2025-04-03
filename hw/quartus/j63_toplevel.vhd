@@ -158,6 +158,8 @@ architecture rtl of j63_toplevel is
   signal vga_hs_s : std_logic;
   signal vga_vs_s : std_logic;
 
+  signal uart_rxd_sync : std_logic;
+
   signal sram_we      : std_logic;
   signal sram_data_wr : std_logic_vector(15 downto 0);
   signal sram_data_rd : std_logic_vector(15 downto 0);
@@ -277,10 +279,19 @@ begin
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      uart_i       => uart_rxd_i,
+      uart_i       => uart_rxd_sync,
       data_o       => ledg_o(7 downto 0),
       data_valid_o => open
     );
+
+  u_sync_rxd : entity work.sync_bit
+    port map (
+      clk_dest_i => clk_sys,
+      bit_i      => uart_rxd_i,
+      bit_o      => uart_rxd_sync
+    );
+
+  uart_rts_o <= '1';
 
   ledg_o(8) <= key_i(0);
   hex0_o    <= (others => '1');
