@@ -59,7 +59,6 @@ begin
             if (data_valid_i = '1' and timer_ready = '1') then
               -- Start bit
               uart_o     <= '0';
-              bit_index  <= (others => '0');
               state      <= state_writing_bits;
               baud_timer <= to_unsigned(cycles_per_baud, baud_timer_width);
               data       <= data_i;
