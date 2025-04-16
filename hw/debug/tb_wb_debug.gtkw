@@ -1,0 +1,57 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Wed Apr 16 01:14:50 2025
+[*]
+[dumpfile] "/home/jwilcox/repo/j63/build/j63_nvc/tb_wb_debug.fst"
+[dumpfile_mtime] "Wed Apr 16 01:14:40 2025"
+[dumpfile_size] 1059
+[savefile] "/home/jwilcox/repo/j63/hw/debug/tb_wb_debug.gtkw"
+[timestart] 0
+[size] 1920 1013
+[pos] -1 -1
+*-26.141966 135000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_wb_debug.
+[sst_width] 271
+[signals_width] 158
+[sst_expanded] 1
+[sst_vpaned_height] 674
+@28
+tb_wb_debug.clk
+tb_wb_debug.rst
+@23
+tb_wb_debug.read_value[31:0]
+@200
+-
+@28
+tb_wb_debug.wb_ack
+@22
+tb_wb_debug.wb_addr[19:0]
+@28
+tb_wb_debug.wb_cyc
+@22
+tb_wb_debug.wb_dat_rd[15:0]
+tb_wb_debug.wb_dat_wr[15:0]
+@28
+tb_wb_debug.wb_sel[1:0]
+tb_wb_debug.wb_stall
+tb_wb_debug.wb_stb
+tb_wb_debug.wb_we
+@200
+-
+@28
+tb_wb_debug.cmd_valid
+@22
+tb_wb_debug.cmd[7:0]
+@28
+tb_wb_debug.data_valid
+@22
+tb_wb_debug.data[7:0]
+@200
+-
+@28
+tb_wb_debug.u_wb_debug.state
+@22
+tb_wb_debug.u_wb_debug.address[31:0]
+tb_wb_debug.u_wb_debug.data[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

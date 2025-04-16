@@ -43,6 +43,7 @@ VHDL_SOURCES = [
     "hw/serial/tb_uart_tx.vhd",
     "hw/serial/tb_uart_rx.vhd",
     "hw/debug/wb_debug.vhd",
+    "hw/debug/tb_wb_debug.vhd",
     "hw/mem/wb_sram.vhd",
     "hw/mem/wb_dma_to_fifo.vhd",
     "hw/mem/wb_arbiter.vhd",
@@ -219,6 +220,12 @@ def build_task_graph():
         rule,
         dependencies,
         "tb_uart_tx",
+        run_args=[],
+    )
+    define_simulation(
+        rule,
+        dependencies,
+        "tb_wb_debug",
         run_args=[],
     )
 

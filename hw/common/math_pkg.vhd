@@ -7,13 +7,20 @@ package math_pkg is
     period: time;
     clk_period: time;
     round_up: boolean
-  )
-        return integer;
+  ) return integer;
 
   function clog2 (
     n: integer
-  )
-        return integer;
+  ) return integer;
+
+  type range_t is record
+    high : natural;
+    low  : natural;
+  end record range_t;
+
+  function byte_range (
+    byte_index: natural
+  ) return range_t;
 
 end package math_pkg;
 
@@ -23,8 +30,7 @@ package body math_pkg is
     period: time;
     clk_period: time;
     round_up: boolean
-  )
-        return integer is
+  ) return integer is
   begin
 
     if (round_up) then
@@ -37,12 +43,25 @@ package body math_pkg is
 
   function clog2 (
     n: integer
-  )
-        return integer is
+  ) return integer is
   begin
 
     return integer(ceil(log2(real(n))));
 
   end function clog2;
+
+  function byte_range (
+    byte_index: natural
+  ) return range_t is
+
+    variable result : range_t;
+
+  begin
+
+    result.high := 8 * (byte_index + 1) - 1;
+    result.low  := 8 * byte_index;
+    return result;
+
+  end function byte_range;
 
 end package body math_pkg;
