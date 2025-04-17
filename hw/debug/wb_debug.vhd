@@ -39,11 +39,15 @@ architecture rtl of wb_debug is
   constant op_reg_write : std_logic_vector(1 downto 0) := "10";
   constant op_execute   : std_logic_vector(1 downto 0) := "11";
 
-  constant opcode_lo : natural := 0;
-  constant opcode_hi : natural := 1;
-  constant a1_d0     : natural := 2;
-  constant len_lo    : natural := 3;
-  constant len_hi    : natural := 5;
+  constant opcode_lo   : natural := 0;
+  constant opcode_hi   : natural := 1;
+  constant a1_d0       : natural := 2;
+  constant len_lo      : natural := 3;
+  constant len_hi      : natural := 5;
+  constant w1_r0       : natural := 2;
+  constant auto_inc_a  : natural := 3;
+  constant byte_sel_lo : natural := 4;
+  constant byte_sel_hi : natural := 7;
 
   signal address : std_logic_vector(31 downto 0);
   signal data    : std_logic_vector(31 downto 0);
@@ -56,7 +60,6 @@ begin
 
   wb_dat_o  <= data(data_width - 1 downto 0);
   wb_addr_o <= address(addr_width - 1 downto 0);
-  wb_sel_o  <= (others => '1');
 
   cmd_p : process (clk_i) is
 
@@ -79,6 +82,7 @@ begin
         wb_cyc_o <= '0';
         wb_stb_o <= '0';
         wb_we_o  <= '0';
+        wb_sel_o <= (others => '0');
       else
 
         case (state) is
@@ -113,7 +117,17 @@ begin
 
                 when op_execute =>
 
-                  state <= state_execute_start;
+                  wb_cyc_o   <= '1';
+                  wb_stb_o   <= '1';
+                  wb_we_o    <= cmd_i(w1_r0);
+                  wb_sel_o   <= cmd_i(byte_sel_hi downto byte_sel_lo);
+                  active_cmd <= cmd_i;
+                  -- TODO: not sure if this is right
+                  if (wb_stall_i = '1') then
+                    state <= state_execute_start;
+                  else
+                    state <= state_execute_wait;
+                  end if;
 
                 when others =>
 
@@ -156,7 +170,27 @@ begin
 
           when state_execute_start =>
 
+            -- TODO: Is the WB target allowed to drop stall _and_ send an ack on the same cycle?
+            if (wb_stall_i = '0') then
+              state <= state_execute_wait;
+            end if;
+
           when state_execute_wait =>
+
+            -- TODO: Maybe this should generate an ACK of some kind on the
+            --       debug bus. That would allow the debug controller to wait between
+            --       commands, since it would know when the execute command is done.
+            if (wb_ack_i = '1') then
+              wb_cyc_o <= '0';
+              wb_stb_o <= '0';
+              state    <= state_idle;
+              if (active_cmd(w1_r0) = '0') then
+                data <= wb_dat_i;
+              end if;
+              if (active_cmd(auto_inc_a) = '1') then
+                address <= std_logic_vector(unsigned(address) + 1);
+              end if;
+            end if;
 
         end case;
 
