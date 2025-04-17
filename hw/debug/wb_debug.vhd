@@ -39,15 +39,17 @@ architecture rtl of wb_debug is
   constant op_reg_write : std_logic_vector(1 downto 0) := "10";
   constant op_execute   : std_logic_vector(1 downto 0) := "11";
 
+  constant opcode_lo : natural := 0;
+  constant opcode_hi : natural := 1;
+  constant a1_d0     : natural := 2;
+  constant len_lo    : natural := 3;
+  constant len_hi    : natural := 5;
+
   signal address : std_logic_vector(31 downto 0);
   signal data    : std_logic_vector(31 downto 0);
 
-  signal cmd_opcode : std_logic_vector(1 downto 0);
-  signal cmd_len    : std_logic_vector(2 downto 0);
-  signal cmd_a1_d0  : std_logic;
-
+  signal active_cmd   : std_logic_vector(7 downto 0);
   signal byte_pointer : unsigned(2 downto 0);
-  signal a1_d0        : std_logic;
   signal state        : state_t;
 
 begin
@@ -55,10 +57,6 @@ begin
   wb_dat_o  <= data(data_width - 1 downto 0);
   wb_addr_o <= address(addr_width - 1 downto 0);
   wb_sel_o  <= (others => '1');
-
-  cmd_opcode <= cmd_i(1 downto 0);
-  cmd_a1_d0  <= cmd_i(2);
-  cmd_len    <= cmd_i(5 downto 3);
 
   cmd_p : process (clk_i) is
 
@@ -70,7 +68,7 @@ begin
       if (rst_i = '1') then
         byte_pointer <= (others => '0');
         state        <= state_idle;
-        a1_d0        <= '0';
+        active_cmd   <= (others => '0');
 
         address <= (others => '0');
         data    <= (others => '0');
@@ -89,29 +87,29 @@ begin
 
             if (cmd_valid_i = '1') then
 
-              case (cmd_opcode) is
+              case (cmd_i(opcode_hi downto opcode_lo)) is
 
                 when op_nop =>
 
                 when op_reg_read =>
 
-                  byte_pointer <= unsigned(cmd_len) - 1;
+                  byte_pointer <= unsigned(cmd_i(len_hi downto len_lo)) - 1;
                   state        <= state_read_reg;
-                  a1_d0        <= cmd_a1_d0;
 
-                  byte_range_v := byte_range(to_integer(unsigned(cmd_len) - 1));
-                  if (cmd_a1_d0 = '1') then
+                  byte_range_v := byte_range(to_integer(unsigned(cmd_i(len_hi downto len_lo)) - 1));
+                  if (cmd_i(a1_d0) = '1') then
                     data_o <= address(byte_range_v.high downto byte_range_v.low);
                   else
                     data_o <= data(byte_range_v.high downto byte_range_v.low);
                   end if;
                   data_valid_o <= '1';
+                  active_cmd   <= cmd_i;
 
                 when op_reg_write =>
 
-                  byte_pointer <= unsigned(cmd_len);
+                  byte_pointer <= unsigned(cmd_i(len_hi downto len_lo));
                   state        <= state_write_reg;
-                  a1_d0        <= cmd_a1_d0;
+                  active_cmd   <= cmd_i;
 
                 when op_execute =>
 
@@ -132,7 +130,7 @@ begin
               else
                 byte_pointer <= byte_pointer - 1;
                 byte_range_v := byte_range(to_integer(byte_pointer - 1));
-                if (a1_d0 = '1') then
+                if (active_cmd(a1_d0) = '1') then
                   data_o <= address(byte_range_v.high downto byte_range_v.low);
                 else
                   data_o <= data(byte_range_v.high downto byte_range_v.low);
@@ -146,7 +144,7 @@ begin
             if (cmd_valid_i = '1') then
               byte_pointer <= byte_pointer - 1;
               byte_range_v := byte_range(to_integer(byte_pointer) - 1);
-              if (a1_d0 = '1') then
+              if (active_cmd(a1_d0) = '1') then
                 address(byte_range_v.high downto byte_range_v.low) <= cmd_i;
               else
                 data(byte_range_v.high downto byte_range_v.low) <= cmd_i;
