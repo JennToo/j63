@@ -122,7 +122,6 @@ begin
                   wb_we_o    <= cmd_i(w1_r0);
                   wb_sel_o   <= cmd_i(byte_sel_hi downto byte_sel_lo);
                   active_cmd <= cmd_i;
-                  -- TODO: not sure if this is right
                   if (wb_stall_i = '1') then
                     state <= state_execute_start;
                   else
@@ -170,7 +169,6 @@ begin
 
           when state_execute_start =>
 
-            -- TODO: Is the WB target allowed to drop stall _and_ send an ack on the same cycle?
             if (wb_stall_i = '0') then
               state <= state_execute_wait;
             end if;

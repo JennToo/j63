@@ -25,6 +25,11 @@ architecture behave of tb_wb_debug is
   signal wb_stb    : std_logic;
   signal wb_we     : std_logic;
 
+  signal sram_addr    : std_logic_vector(19 downto 0);
+  signal sram_data_wr : std_logic_vector(15 downto 0);
+  signal sram_data_rd : std_logic_vector(15 downto 0);
+  signal sram_we      : std_logic;
+
   signal cmd          : std_logic_vector(7 downto 0);
   signal cmd_valid    : std_logic;
   signal data_consume : std_logic;
@@ -61,6 +66,43 @@ begin
       data_consume_i => data_consume,
       data_o         => data,
       data_valid_o   => data_valid
+    );
+
+  u_sim_sram : entity work.sim_sram
+    port map (
+      clk_i => clk,
+      rst_i => rst,
+
+      sram_addr_i => sram_addr,
+      sram_data_i => sram_data_wr,
+      sram_data_o => sram_data_rd,
+      sram_we_i   => sram_we
+    );
+
+  u_wb_sram : entity work.wb_sram
+    generic map (
+      addr_width => 20,
+      data_width => 16
+    )
+    port map (
+      clk_i => clk,
+      rst_i => rst,
+
+      wb_cyc_i   => wb_cyc,
+      wb_dat_i   => wb_dat_wr,
+      wb_dat_o   => wb_dat_rd,
+      wb_ack_o   => wb_ack,
+      wb_addr_i  => wb_addr,
+      wb_stall_o => wb_stall,
+      wb_sel_i   => wb_sel,
+      wb_stb_i   => wb_stb,
+      wb_we_i    => wb_we,
+
+      sram_addr_o => sram_addr,
+      sram_dat_o  => sram_data_wr,
+      sram_dat_i  => sram_data_rd,
+      sram_sel_o  => open,
+      sram_we_o   => sram_we
     );
 
   stimulus_p : process is
