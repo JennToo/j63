@@ -56,10 +56,14 @@ architecture rtl of wb_debug is
   signal byte_pointer : unsigned(2 downto 0);
   signal state        : state_t;
 
+  signal cmd_byte_sel : std_logic_vector(3 downto 0);
+
 begin
 
   wb_dat_o  <= data(data_width - 1 downto 0);
   wb_addr_o <= address(addr_width - 1 downto 0);
+
+  cmd_byte_sel <= cmd_i(byte_sel_hi downto byte_sel_lo);
 
   cmd_p : process (clk_i) is
 
@@ -120,7 +124,7 @@ begin
                   wb_cyc_o   <= '1';
                   wb_stb_o   <= '1';
                   wb_we_o    <= cmd_i(w1_r0);
-                  wb_sel_o   <= cmd_i(byte_sel_hi downto byte_sel_lo);
+                  wb_sel_o   <= cmd_byte_sel((data_width / 8) - 1 downto 0);
                   active_cmd <= cmd_i;
                   if (wb_stall_i = '1') then
                     state <= state_execute_start;
@@ -183,7 +187,7 @@ begin
               wb_stb_o <= '0';
               state    <= state_idle;
               if (active_cmd(w1_r0) = '0') then
-                data <= wb_dat_i;
+                data <= std_logic_vector(resize(unsigned(wb_dat_i), 32));
               end if;
               if (active_cmd(auto_inc_a) = '1') then
                 address <= std_logic_vector(unsigned(address) + 1);

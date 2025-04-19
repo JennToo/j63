@@ -10,7 +10,9 @@ end entity tb_wb_debug;
 
 architecture behave of tb_wb_debug is
 
-  constant clk_period : time := 10 ns;
+  constant clk_period : time      := 10 ns;
+  constant addr_reg   : std_logic := '1';
+  constant data_reg   : std_logic := '0';
 
   signal clk : std_logic := '0';
   signal rst : std_logic := '1';
@@ -180,6 +182,21 @@ begin
 
     end procedure read_reg;
 
+    procedure execute (
+      constant w1_r0 : in std_logic;
+      constant inc_a : in std_logic;
+
+      constant byte_sel : in std_logic_vector(3 downto 0)
+    ) is begin
+
+      send_byte(byte_sel & inc_a & w1_r0 & "11");
+      -- TODO: Remove hacks
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+
+    end procedure execute;
+
   begin
 
     data_consume <= '0';
@@ -190,12 +207,19 @@ begin
     wait for clk_period;
     rst <= '0';
 
-    write_reg('1', 32x"5544AB07");
-    read_reg('1', read_value);
-    assert read_value = 32x"5544AB07"
+    write_reg(addr_reg, 32x"1000");
+    write_reg(data_reg, 32x"1155AD");
+    execute('1', '0', "1111");
+    write_reg(data_reg, 32x"0");
+    read_reg(addr_reg, read_value);
+    assert read_value = 32x"1000"
       severity failure;
-    read_reg('0', read_value);
-    assert read_value = 32x"0"
+    execute('0', '1', "1111");
+    read_reg(addr_reg, read_value);
+    assert read_value = 32x"1001"
+      severity failure;
+    read_reg(data_reg, read_value);
+    assert read_value = 32x"55AD"
       severity failure;
 
     wait until rising_edge(clk);
