@@ -8,18 +8,45 @@ def main():
     parser.add_argument("serial_dev")
     args = parser.parse_args()
 
-    with serial.Serial(args.serial_dev, 230400) as uart:
-        uart.write(cmd_reg_write("A", 4))
-        uart.write((0).to_bytes())
-        uart.write((0).to_bytes())
-        uart.write((0).to_bytes())
-        uart.write((0).to_bytes())
-        uart.write(cmd_reg_write("D", 2))
-        uart.write((0).to_bytes())
-        uart.write((0xFF).to_bytes())
+    with serial.Serial(args.serial_dev, 230400, timeout=1) as uart:
+        print(uart.read(4))
+        write_framebuffer(uart)
+        read_framebuffer(uart)
 
-        for i in range(320 * 240):
-            uart.write(cmd_execute("W", inc=True))
+
+def write_framebuffer(uart):
+    uart.write(cmd_reg_write("A", 4))
+    uart.write((0).to_bytes())
+    uart.write((0).to_bytes())
+    uart.write((0).to_bytes())
+    uart.write((0).to_bytes())
+    uart.write(cmd_reg_write("D", 4))
+    uart.write((0xAA).to_bytes())
+    uart.write((0xAA).to_bytes())
+    uart.write((0xAA).to_bytes())
+    uart.write((0xAA).to_bytes())
+
+    for i in range(320 * 240):
+        uart.write(cmd_execute("W", sel=0b1111, inc=True))
+
+
+def read_framebuffer(uart):
+    uart.write(cmd_reg_write("A", 4))
+    uart.write((0).to_bytes())
+    uart.write((0).to_bytes())
+    uart.write((0).to_bytes())
+    uart.write((0).to_bytes())
+    uart.write(cmd_reg_write("D", 4))
+    uart.write((0x55).to_bytes())
+    uart.write((0x55).to_bytes())
+    uart.write((0x55).to_bytes())
+    uart.write((0x55).to_bytes())
+
+    for i in range(320 * 240):
+        uart.write(cmd_execute("R", sel=0b1111, inc=True))
+        uart.write(cmd_reg_read("D", 2))
+        result = uart.read(2)
+        print(result)
 
 
 OP_REG_READ = 0b01

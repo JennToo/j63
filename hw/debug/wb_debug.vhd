@@ -67,7 +67,7 @@ begin
 
   cmd_p : process (clk_i) is
 
-    variable byte_range_v : range_t;
+    variable byte_index : natural;
 
   begin
 
@@ -104,11 +104,11 @@ begin
                   byte_pointer <= unsigned(cmd_i(len_hi downto len_lo)) - 1;
                   state        <= state_read_reg;
 
-                  byte_range_v := byte_range(to_integer(unsigned(cmd_i(len_hi downto len_lo)) - 1));
+                  byte_index := to_integer(unsigned(cmd_i(len_hi downto len_lo)) - 1);
                   if (cmd_i(a1_d0) = '1') then
-                    data_o <= address(byte_range_v.high downto byte_range_v.low);
+                    get_byte32(address, byte_index, data_o);
                   else
-                    data_o <= data(byte_range_v.high downto byte_range_v.low);
+                    get_byte32(data, byte_index, data_o);
                   end if;
                   data_valid_o <= '1';
                   active_cmd   <= cmd_i;
@@ -146,11 +146,11 @@ begin
                 data_valid_o <= '0';
               else
                 byte_pointer <= byte_pointer - 1;
-                byte_range_v := byte_range(to_integer(byte_pointer - 1));
+                byte_index   := to_integer(byte_pointer - 1);
                 if (active_cmd(a1_d0) = '1') then
-                  data_o <= address(byte_range_v.high downto byte_range_v.low);
+                  get_byte32(address, byte_index, data_o);
                 else
-                  data_o <= data(byte_range_v.high downto byte_range_v.low);
+                  get_byte32(data, byte_index, data_o);
                 end if;
                 data_valid_o <= '1';
               end if;
@@ -160,11 +160,11 @@ begin
 
             if (cmd_valid_i = '1') then
               byte_pointer <= byte_pointer - 1;
-              byte_range_v := byte_range(to_integer(byte_pointer) - 1);
+              byte_index   := to_integer(byte_pointer) - 1;
               if (active_cmd(a1_d0) = '1') then
-                address(byte_range_v.high downto byte_range_v.low) <= cmd_i;
+                set_byte32(address, byte_index, cmd_i, address);
               else
-                data(byte_range_v.high downto byte_range_v.low) <= cmd_i;
+                set_byte32(data, byte_index, cmd_i, data);
               end if;
               if (byte_pointer = 1) then
                 state <= state_idle;

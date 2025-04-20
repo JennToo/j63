@@ -177,6 +177,28 @@ architecture rtl of j63_toplevel is
   signal vram_wb_stb    : std_logic;
   signal vram_wb_we     : std_logic;
 
+  signal debug_wb_cyc    : std_logic;
+  signal debug_wb_dat    : std_logic_vector(15 downto 0);
+  signal debug_wb_dat_rd : std_logic_vector(15 downto 0);
+  signal debug_wb_dat_wr : std_logic_vector(15 downto 0);
+  signal debug_wb_ack    : std_logic;
+  signal debug_wb_addr   : std_logic_vector(19 downto 0);
+  signal debug_wb_stall  : std_logic;
+  signal debug_wb_sel    : std_logic_vector(1 downto 0);
+  signal debug_wb_stb    : std_logic;
+  signal debug_wb_we     : std_logic;
+
+  signal gpu_vram_wb_cyc    : std_logic;
+  signal gpu_vram_wb_dat    : std_logic_vector(15 downto 0);
+  signal gpu_vram_wb_dat_rd : std_logic_vector(15 downto 0);
+  signal gpu_vram_wb_dat_wr : std_logic_vector(15 downto 0);
+  signal gpu_vram_wb_ack    : std_logic;
+  signal gpu_vram_wb_addr   : std_logic_vector(19 downto 0);
+  signal gpu_vram_wb_stall  : std_logic;
+  signal gpu_vram_wb_sel    : std_logic_vector(1 downto 0);
+  signal gpu_vram_wb_stb    : std_logic;
+  signal gpu_vram_wb_we     : std_logic;
+
 begin
 
   -- The system clock (100 MHz) is too dissimilar to the VGA clock (25.175 MHz)
@@ -216,15 +238,15 @@ begin
       vga_g_o      => vga_g_o,
       vga_b_o      => vga_b_o,
 
-      vram_wb_cyc_o   => vram_wb_cyc,
-      vram_wb_dat_i   => vram_wb_dat_rd,
-      vram_wb_dat_o   => vram_wb_dat_wr,
-      vram_wb_ack_i   => vram_wb_ack,
-      vram_wb_addr_o  => vram_wb_addr,
-      vram_wb_stall_i => vram_wb_stall,
-      vram_wb_sel_o   => vram_wb_sel,
-      vram_wb_stb_o   => vram_wb_stb,
-      vram_wb_we_o    => vram_wb_we
+      vram_wb_cyc_o   => gpu_vram_wb_cyc,
+      vram_wb_dat_i   => gpu_vram_wb_dat_rd,
+      vram_wb_dat_o   => gpu_vram_wb_dat_wr,
+      vram_wb_ack_i   => gpu_vram_wb_ack,
+      vram_wb_addr_o  => gpu_vram_wb_addr,
+      vram_wb_stall_i => gpu_vram_wb_stall,
+      vram_wb_sel_o   => gpu_vram_wb_sel,
+      vram_wb_stb_o   => gpu_vram_wb_stb,
+      vram_wb_we_o    => gpu_vram_wb_we
     );
 
   u_wb_vram : entity work.wb_sram
@@ -262,6 +284,46 @@ begin
   sram_we_no   <= not sram_we;
   sram_oe_no   <= '0';
 
+  u_vram_debug_arbiter : entity work.wb_arbiter
+    generic map (
+      addr_width => 20,
+      data_width => 16
+    )
+    port map (
+      clk_i => clk_sys,
+      rst_i => rst_sys,
+
+      a_wb_cyc_i   => gpu_vram_wb_cyc,
+      a_wb_dat_i   => gpu_vram_wb_dat_wr,
+      a_wb_dat_o   => gpu_vram_wb_dat_rd,
+      a_wb_ack_o   => gpu_vram_wb_ack,
+      a_wb_addr_i  => gpu_vram_wb_addr,
+      a_wb_stall_o => gpu_vram_wb_stall,
+      a_wb_sel_i   => gpu_vram_wb_sel,
+      a_wb_stb_i   => gpu_vram_wb_stb,
+      a_wb_we_i    => gpu_vram_wb_we,
+
+      b_wb_cyc_i   => debug_wb_cyc,
+      b_wb_dat_i   => debug_wb_dat_wr,
+      b_wb_dat_o   => debug_wb_dat_rd,
+      b_wb_ack_o   => debug_wb_ack,
+      b_wb_addr_i  => debug_wb_addr,
+      b_wb_stall_o => debug_wb_stall,
+      b_wb_sel_i   => debug_wb_sel,
+      b_wb_stb_i   => debug_wb_stb,
+      b_wb_we_i    => debug_wb_we,
+
+      target_wb_cyc_o   => vram_wb_cyc,
+      target_wb_dat_i   => vram_wb_dat_rd,
+      target_wb_dat_o   => vram_wb_dat_wr,
+      target_wb_ack_i   => vram_wb_ack,
+      target_wb_addr_o  => vram_wb_addr,
+      target_wb_stall_i => vram_wb_stall,
+      target_wb_sel_o   => vram_wb_sel,
+      target_wb_stb_o   => vram_wb_stb,
+      target_wb_we_o    => vram_wb_we
+    );
+
   u_reset_gen : entity work.reset_gen
     port map (
       async_rst_ni => key_i(0),
@@ -271,34 +333,29 @@ begin
       rst_sys_o    => rst_sys
     );
 
-  -- Temp hacks to test UART on hardware
-  u_uart_rx : entity work.uart_rx
+  u_debug : entity work.wb_debug_uart
     generic map (
       clk_period  => 10 ns,
-      baud_period => 4340 ns
+      baud_period => 4340 ns,
+      addr_width  => 20,
+      data_width  => 16
     )
     port map (
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      uart_i       => uart_rxd_sync,
-      data_o       => uart_data,
-      data_valid_o => uart_data_valid
-    );
+      wb_cyc_o   => debug_wb_cyc,
+      wb_dat_i   => debug_wb_dat_rd,
+      wb_dat_o   => debug_wb_dat_wr,
+      wb_ack_i   => debug_wb_ack,
+      wb_addr_o  => debug_wb_addr,
+      wb_stall_i => debug_wb_stall,
+      wb_sel_o   => debug_wb_sel,
+      wb_stb_o   => debug_wb_stb,
+      wb_we_o    => debug_wb_we,
 
-  u_uart_tx : entity work.uart_tx
-    generic map (
-      clk_period  => 10 ns,
-      baud_period => 4340 ns
-    )
-    port map (
-      clk_i => clk_sys,
-      rst_i => rst_sys,
-
-      uart_o       => uart_txd_o,
-      data_i       => uart_data,
-      data_valid_i => uart_data_valid,
-      ready_o      => open
+      uart_rxd_i => uart_rxd_sync,
+      uart_txd_o => uart_txd_o
     );
 
   u_sync_rxd : entity work.sync_bit

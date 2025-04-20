@@ -46,6 +46,7 @@ VHDL_SOURCES = [
     "hw/mem/wb_dma_to_fifo.vhd",
     "hw/mem/wb_arbiter.vhd",
     "hw/debug/wb_debug.vhd",
+    "hw/debug/wb_debug_uart.vhd",
     "hw/gpu/sim_sram.vhd",
     "hw/debug/tb_wb_debug.vhd",
     "hw/gpu/gpu_pkg.vhd",
@@ -66,6 +67,7 @@ VSG_EXCLUDED = [
 VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
     "hw/serial/tb_uart_rx.vhd",
+    "hw/debug/tb_wb_debug.vhd",
     "hw/gpu/tb_gpu.vhd",
     "hw/gpu/sim_vga.vhd",
     "hw/gpu/sim_sram.vhd",
