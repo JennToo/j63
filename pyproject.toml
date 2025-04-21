@@ -12,6 +12,7 @@ ruff = "^0.9.9"
 vsg = "^3.31.0"
 tomli-w = "^1.2.0"
 pyserial = "^3.5"
+pillow = "^11.2.1"
 
 [build-system]
 requires = ["poetry-core"]
