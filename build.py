@@ -550,5 +550,24 @@ def fatal(message, code=1):
     sys.exit(code)
 
 
+def transitive_closure(root, nodes):
+    all_deps = []
+    new_deps = [root]
+    while new_deps:
+        all_deps.extend(new_deps)
+        next_deps = []
+        for new_dep in new_deps:
+            next_deps.extend(nodes[new_dep])
+        new_deps = next_deps
+    all_deps.reverse()
+    result = []
+    for dep in all_deps:
+        if dep not in result:
+            result.append(dep)
+    return result
+
+
+print(transitive_closure("A", {"A": ["B", "C"], "B": ["C"], "C": []}))
+
 if __name__ == "__main__":
     main()
