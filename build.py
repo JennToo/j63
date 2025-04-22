@@ -506,6 +506,7 @@ def nvc_quartus_install(task, **kwargs):
 
     env = os.environ.copy()
     env["NVC_INSTALL_DEST"] = str(build_dir.absolute())
+    build_dir.mkdir(exist_ok=True, parents=True)
     run(["nvc", "--install", "quartus"], cwd=build_dir, env=env)
 
     touch(task)
