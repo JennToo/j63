@@ -24,6 +24,60 @@ PYTHON_SOURCES = [
     "build.py",
     "tools/uart_debug.py",
 ]
+VHDL_FILE_TREE = {
+    "hw/common/math_pkg.vhd": [],
+    "hw/common/sync_bit.vhd": [],
+    "hw/common/test_pkg.vhd": [],
+    "hw/debug/tb_wb_debug.vhd": [
+        "hw/gpu/sim_sram.vhd",
+        "hw/debug/wb_debug.vhd",
+        "hw/mem/wb_sram.vhd",
+    ],
+    "hw/debug/wb_debug.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/debug/wb_debug_uart.vhd": [
+        "hw/debug/wb_debug.vhd",
+        "hw/serial/uart_rx.vhd",
+        "hw/serial/uart_tx.vhd",
+    ],
+    "hw/gpu/gpu.vhd": [
+        "hw/gpu/gpu_pkg.vhd",
+        "hw/mem/wb_arbiter.vhd",
+        "hw/quartus/vga_fb_fifo.vhd",
+        "hw/mem/wb_dma_to_fifo.vhd",
+        "hw/gpu/vga.vhd",
+    ],
+    "hw/gpu/gpu_pkg.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/gpu/sim_sram.vhd": [],
+    "hw/gpu/sim_vga.vhd": ["hw/common/test_pkg.vhd"],
+    "hw/gpu/tb_gpu.vhd": [
+        "hw/gpu/gpu.vhd",
+        "hw/mem/wb_sram.vhd",
+        "hw/gpu/sim_vga.vhd",
+        "hw/gpu/sim_sram.vhd",
+    ],
+    "hw/gpu/vga.vhd": ["hw/gpu/gpu_pkg.vhd", "hw/common/math_pkg.vhd"],
+    "hw/mem/wb_arbiter.vhd": [],
+    "hw/mem/wb_dma_to_fifo.vhd": [],
+    "hw/mem/wb_sram.vhd": [],
+    "hw/quartus/j63_toplevel.vhd": [
+        "hw/quartus/sys_pll.vhd",
+        "hw/quartus/vga_pll.vhd",
+        "hw/gpu/gpu.vhd",
+        "hw/mem/wb_sram.vhd",
+        "hw/mem/wb_arbiter.vhd",
+        "hw/sys/reset_gen.vhd",
+        "hw/debug/wb_debug_uart.vhd",
+        "hw/common/sync_bit.vhd",
+    ],
+    "hw/quartus/sys_pll.vhd": [],
+    "hw/quartus/vga_fb_fifo.vhd": [],
+    "hw/quartus/vga_pll.vhd": [],
+    "hw/serial/tb_uart_rx.vhd": ["hw/serial/uart_rx.vhd"],
+    "hw/serial/tb_uart_tx.vhd": ["hw/serial/uart_tx.vhd"],
+    "hw/serial/uart_rx.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/serial/uart_tx.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/sys/reset_gen.vhd": [],
+}
 QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.qpf",
     "hw/quartus/j63.qsf",
@@ -33,38 +87,12 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/vga_pll.qip",
     "hw/quartus/vga_fb_fifo.qip",
 ]
-VHDL_SOURCES = [
-    "hw/common/math_pkg.vhd",
-    "hw/common/test_pkg.vhd",
-    "hw/common/sync_bit.vhd",
-    "hw/sys/reset_gen.vhd",
-    "hw/serial/uart_tx.vhd",
-    "hw/serial/uart_rx.vhd",
-    "hw/serial/tb_uart_tx.vhd",
-    "hw/serial/tb_uart_rx.vhd",
-    "hw/mem/wb_sram.vhd",
-    "hw/mem/wb_dma_to_fifo.vhd",
-    "hw/mem/wb_arbiter.vhd",
-    "hw/debug/wb_debug.vhd",
-    "hw/debug/wb_debug_uart.vhd",
-    "hw/gpu/sim_sram.vhd",
-    "hw/debug/tb_wb_debug.vhd",
-    "hw/gpu/gpu_pkg.vhd",
-    "hw/quartus/vga_fb_fifo.vhd",
-    "hw/gpu/vga.vhd",
-    "hw/gpu/sim_vga.vhd",
-    "hw/gpu/gpu.vhd",
-    "hw/gpu/tb_gpu.vhd",
-    "hw/quartus/sys_pll.vhd",
-    "hw/quartus/vga_pll.vhd",
-    "hw/quartus/j63_toplevel.vhd",
-]
 VSG_EXCLUDED = [
     "hw/quartus/sys_pll.vhd",
     "hw/quartus/vga_pll.vhd",
     "hw/quartus/vga_fb_fifo.vhd",
 ]
-VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
+VSG_SOURCES = [x for x in VHDL_FILE_TREE.keys() if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
     "hw/serial/tb_uart_rx.vhd",
     "hw/debug/tb_wb_debug.vhd",
@@ -72,7 +100,7 @@ QUARTUS_EXCLUDED = [
     "hw/gpu/sim_vga.vhd",
     "hw/gpu/sim_sram.vhd",
 ]
-QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
+QUARTUS_SOURCES = [x for x in VHDL_FILE_TREE.keys() if x not in QUARTUS_EXCLUDED]
 SBY_FILES = ["hw/mem/wb_sram.sby"]
 
 
@@ -193,12 +221,6 @@ def build_task_graph():
     for sby_file in SBY_FILES:
         define_sby(rule, dependencies, sby_file)
 
-    rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
-    rule(
-        "build/j63_nvc/meta-analyzed",
-        nvc_analyze,
-        VHDL_SOURCES + ["build/j63_nvc/meta-quartus"],
-    )
     rule("build/j63_nvc", mkdir, [])
 
     rule("build/j63_nvc/meta-run", nop, [])
@@ -208,30 +230,37 @@ def build_task_graph():
     gpu_sim_run_meta = define_simulation(
         rule,
         dependencies,
-        "tb_gpu",
+        name="tb_gpu",
+        tb_file="hw/gpu/tb_gpu.vhd",
         run_args=["--load", "hw/gpu/gpu-cosim/target/release/libgpucosim.so"],
+        need_quartus=True,
     )
     dependencies[gpu_sim_run_meta].append(gpu_cosim_meta)
     define_simulation(
         rule,
         dependencies,
-        "tb_uart_rx",
+        name="tb_uart_rx",
+        tb_file="hw/serial/tb_uart_rx.vhd",
         run_args=[],
     )
     define_simulation(
         rule,
         dependencies,
-        "tb_uart_tx",
+        name="tb_uart_tx",
+        tb_file="hw/serial/tb_uart_tx.vhd",
         run_args=[],
     )
     define_simulation(
         rule,
         dependencies,
-        "tb_wb_debug",
+        name="tb_wb_debug",
+        tb_file="hw/debug/tb_wb_debug.vhd",
         run_args=[],
     )
 
-    for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES + SBY_FILES:
+    for source in (
+        PYTHON_SOURCES + QUARTUS_PROJECT_FILES + list(VHDL_FILE_TREE.keys()) + SBY_FILES
+    ):
         rule(source, file_exists, [])
 
     return Tasks(dependencies=dependencies, builders=builders)
@@ -257,24 +286,34 @@ def define_sby(rule, dependencies, sby_file):
     dependencies["formal"].append(target)
 
 
-def define_simulation(rule, dependencies, name, run_args):
+def define_simulation(rule, dependencies, name, tb_file, run_args, need_quartus=False):
+    vhdl_sources = transitive_closure(tb_file, VHDL_FILE_TREE)
+    if need_quartus:
+        rule(f"build/j63_nvc/{name}/meta-quartus", nvc_quartus_install, [])
+        vhdl_sources += [f"build/j63_nvc/{name}/meta-quartus"]
+
     rule(
-        f"build/j63_nvc/meta-elab-{name}",
-        lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
-        ["build/j63_nvc/meta-analyzed"],
+        f"build/j63_nvc/{name}/meta-analyzed",
+        nvc_analyze,
+        vhdl_sources,
     )
-    run_meta = f"build/j63_nvc/meta-run-{name}"
+    rule(
+        f"build/j63_nvc/{name}/meta-elab",
+        lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
+        [f"build/j63_nvc/{name}/meta-analyzed"],
+    )
+    run_meta = f"build/j63_nvc/{name}/meta-run"
     rule(
         run_meta,
         lambda **kwargs: nvc_run(toplevel=name, run_args=run_args, **kwargs),
-        [f"build/j63_nvc/meta-elab-{name}"],
+        [f"build/j63_nvc/{name}/meta-elab"],
     )
     dependencies["build/j63_nvc/meta-run"].append(run_meta)
-    dependencies["build/j63_nvc/meta-elab"].append(f"build/j63_nvc/meta-elab-{name}")
+    dependencies["build/j63_nvc/meta-elab"].append(f"build/j63_nvc/{name}/meta-elab")
     rule(f"sim-{name}", nop, [run_meta])
     rule(
         f"waves-{name}",
-        lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),
+        lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}/{name}.fst"]),
         [],
     )
     return run_meta
@@ -338,7 +377,7 @@ def task_up_to_date(task, dependencies):
 
 
 def write_vhdl_ls():
-    config = {"libraries": {"j63": {"files": VHDL_SOURCES}}}
+    config = {"libraries": {"j63": {"files": list(VHDL_FILE_TREE.keys())}}}
     pathlib.Path("vhdl_ls.toml").write_text(tomli_w.dumps(config))
 
 
@@ -467,6 +506,7 @@ def nvc_quartus_install(task, **kwargs):
 
     env = os.environ.copy()
     env["NVC_INSTALL_DEST"] = str(build_dir.absolute())
+    build_dir.mkdir(exist_ok=True, parents=True)
     run(["nvc", "--install", "quartus"], cwd=build_dir, env=env)
 
     touch(task)
@@ -548,6 +588,23 @@ def run(cmd, cwd=None, env=None):
 def fatal(message, code=1):
     logging.error(message)
     sys.exit(code)
+
+
+def transitive_closure(root, nodes):
+    all_deps = []
+    new_deps = [root]
+    while new_deps:
+        all_deps.extend(new_deps)
+        next_deps = []
+        for new_dep in new_deps:
+            next_deps.extend(nodes[new_dep])
+        new_deps = next_deps
+    all_deps.reverse()
+    result = []
+    for dep in all_deps:
+        if dep not in result:
+            result.append(dep)
+    return result
 
 
 if __name__ == "__main__":
