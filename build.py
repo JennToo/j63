@@ -221,12 +221,6 @@ def build_task_graph():
     for sby_file in SBY_FILES:
         define_sby(rule, dependencies, sby_file)
 
-    rule("build/j63_nvc/meta-quartus", nvc_quartus_install, ["build/j63_nvc"])
-    rule(
-        "build/j63_nvc/meta-analyzed",
-        nvc_analyze,
-        list(VHDL_FILE_TREE.keys()) + ["build/j63_nvc/meta-quartus"],
-    )
     rule("build/j63_nvc", mkdir, [])
 
     rule("build/j63_nvc/meta-run", nop, [])
@@ -236,26 +230,31 @@ def build_task_graph():
     gpu_sim_run_meta = define_simulation(
         rule,
         dependencies,
-        "tb_gpu",
+        name="tb_gpu",
+        tb_file="hw/gpu/tb_gpu.vhd",
         run_args=["--load", "hw/gpu/gpu-cosim/target/release/libgpucosim.so"],
+        need_quartus=True,
     )
     dependencies[gpu_sim_run_meta].append(gpu_cosim_meta)
     define_simulation(
         rule,
         dependencies,
-        "tb_uart_rx",
+        name="tb_uart_rx",
+        tb_file="hw/serial/tb_uart_rx.vhd",
         run_args=[],
     )
     define_simulation(
         rule,
         dependencies,
-        "tb_uart_tx",
+        name="tb_uart_tx",
+        tb_file="hw/serial/tb_uart_tx.vhd",
         run_args=[],
     )
     define_simulation(
         rule,
         dependencies,
-        "tb_wb_debug",
+        name="tb_wb_debug",
+        tb_file="hw/debug/tb_wb_debug.vhd",
         run_args=[],
     )
 
@@ -287,24 +286,34 @@ def define_sby(rule, dependencies, sby_file):
     dependencies["formal"].append(target)
 
 
-def define_simulation(rule, dependencies, name, run_args):
+def define_simulation(rule, dependencies, name, tb_file, run_args, need_quartus=False):
+    vhdl_sources = transitive_closure(tb_file, VHDL_FILE_TREE)
+    if need_quartus:
+        rule(f"build/j63_nvc/{name}/meta-quartus", nvc_quartus_install, [])
+        vhdl_sources += [f"build/j63_nvc/{name}/meta-quartus"]
+
     rule(
-        f"build/j63_nvc/meta-elab-{name}",
-        lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
-        ["build/j63_nvc/meta-analyzed"],
+        f"build/j63_nvc/{name}/meta-analyzed",
+        nvc_analyze,
+        vhdl_sources,
     )
-    run_meta = f"build/j63_nvc/meta-run-{name}"
+    rule(
+        f"build/j63_nvc/{name}/meta-elab",
+        lambda **kwargs: nvc_elaborate(toplevel=name, **kwargs),
+        [f"build/j63_nvc/{name}/meta-analyzed"],
+    )
+    run_meta = f"build/j63_nvc/{name}/meta-run"
     rule(
         run_meta,
         lambda **kwargs: nvc_run(toplevel=name, run_args=run_args, **kwargs),
-        [f"build/j63_nvc/meta-elab-{name}"],
+        [f"build/j63_nvc/{name}/meta-elab"],
     )
     dependencies["build/j63_nvc/meta-run"].append(run_meta)
-    dependencies["build/j63_nvc/meta-elab"].append(f"build/j63_nvc/meta-elab-{name}")
+    dependencies["build/j63_nvc/meta-elab"].append(f"build/j63_nvc/{name}/meta-elab")
     rule(f"sim-{name}", nop, [run_meta])
     rule(
         f"waves-{name}",
-        lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}.fst"]),
+        lambda **kwargs: run(["gtkwave", f"build/j63_nvc/{name}/{name}.fst"]),
         [],
     )
     return run_meta
@@ -596,8 +605,6 @@ def transitive_closure(root, nodes):
             result.append(dep)
     return result
 
-
-print(transitive_closure("A", {"A": ["B", "C"], "B": ["C"], "C": []}))
 
 if __name__ == "__main__":
     main()
