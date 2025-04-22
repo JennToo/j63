@@ -24,6 +24,60 @@ PYTHON_SOURCES = [
     "build.py",
     "tools/uart_debug.py",
 ]
+VHDL_FILE_TREE = {
+    "hw/common/math_pkg.vhd": [],
+    "hw/common/sync_bit.vhd": [],
+    "hw/common/test_pkg.vhd": [],
+    "hw/debug/tb_wb_debug.vhd": [
+        "hw/gpu/sim_sram.vhd",
+        "hw/debug/wb_debug.vhd",
+        "hw/mem/wb_sram.vhd",
+    ],
+    "hw/debug/wb_debug.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/debug/wb_debug_uart.vhd": [
+        "hw/debug/wb_debug.vhd",
+        "hw/serial/uart_rx.vhd",
+        "hw/serial/uart_tx.vhd",
+    ],
+    "hw/gpu/gpu.vhd": [
+        "hw/gpu/gpu_pkg.vhd",
+        "hw/mem/wb_arbiter.vhd",
+        "hw/quartus/vga_fb_fifo.vhd",
+        "hw/mem/wb_dma_to_fifo.vhd",
+        "hw/gpu/vga.vhd",
+    ],
+    "hw/gpu/gpu_pkg.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/gpu/sim_sram.vhd": [],
+    "hw/gpu/sim_vga.vhd": ["hw/common/test_pkg.vhd"],
+    "hw/gpu/tb_gpu.vhd": [
+        "hw/gpu/gpu.vhd",
+        "hw/mem/wb_sram.vhd",
+        "hw/gpu/sim_vga.vhd",
+        "hw/gpu/sim_sram.vhd",
+    ],
+    "hw/gpu/vga.vhd": ["hw/gpu/gpu_pkg.vhd", "hw/common/math_pkg.vhd"],
+    "hw/mem/wb_arbiter.vhd": [],
+    "hw/mem/wb_dma_to_fifo.vhd": [],
+    "hw/mem/wb_sram.vhd": [],
+    "hw/quartus/j63_toplevel.vhd": [
+        "hw/quartus/sys_pll.vhd",
+        "hw/quartus/vga_pll.vhd",
+        "hw/gpu/gpu.vhd",
+        "hw/mem/wb_sram.vhd",
+        "hw/mem/wb_arbiter.vhd",
+        "hw/sys/reset_gen.vhd",
+        "hw/debug/wb_debug_uart.vhd",
+        "hw/common/sync_bit.vhd",
+    ],
+    "hw/quartus/sys_pll.vhd": [],
+    "hw/quartus/vga_fb_fifo.vhd": [],
+    "hw/quartus/vga_pll.vhd": [],
+    "hw/serial/tb_uart_rx.vhd": ["hw/serial/uart_rx.vhd"],
+    "hw/serial/tb_uart_tx.vhd": ["hw/serial/uart_tx.vhd"],
+    "hw/serial/uart_rx.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/serial/uart_tx.vhd": ["hw/common/math_pkg.vhd"],
+    "hw/sys/reset_gen.vhd": [],
+}
 QUARTUS_PROJECT_FILES = [
     "hw/quartus/j63.qpf",
     "hw/quartus/j63.qsf",
@@ -33,38 +87,12 @@ QUARTUS_PROJECT_FILES = [
     "hw/quartus/vga_pll.qip",
     "hw/quartus/vga_fb_fifo.qip",
 ]
-VHDL_SOURCES = [
-    "hw/common/math_pkg.vhd",
-    "hw/common/test_pkg.vhd",
-    "hw/common/sync_bit.vhd",
-    "hw/sys/reset_gen.vhd",
-    "hw/serial/uart_tx.vhd",
-    "hw/serial/uart_rx.vhd",
-    "hw/serial/tb_uart_tx.vhd",
-    "hw/serial/tb_uart_rx.vhd",
-    "hw/mem/wb_sram.vhd",
-    "hw/mem/wb_dma_to_fifo.vhd",
-    "hw/mem/wb_arbiter.vhd",
-    "hw/debug/wb_debug.vhd",
-    "hw/debug/wb_debug_uart.vhd",
-    "hw/gpu/sim_sram.vhd",
-    "hw/debug/tb_wb_debug.vhd",
-    "hw/gpu/gpu_pkg.vhd",
-    "hw/quartus/vga_fb_fifo.vhd",
-    "hw/gpu/vga.vhd",
-    "hw/gpu/sim_vga.vhd",
-    "hw/gpu/gpu.vhd",
-    "hw/gpu/tb_gpu.vhd",
-    "hw/quartus/sys_pll.vhd",
-    "hw/quartus/vga_pll.vhd",
-    "hw/quartus/j63_toplevel.vhd",
-]
 VSG_EXCLUDED = [
     "hw/quartus/sys_pll.vhd",
     "hw/quartus/vga_pll.vhd",
     "hw/quartus/vga_fb_fifo.vhd",
 ]
-VSG_SOURCES = [x for x in VHDL_SOURCES if x not in VSG_EXCLUDED]
+VSG_SOURCES = [x for x in VHDL_FILE_TREE.keys() if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
     "hw/serial/tb_uart_rx.vhd",
     "hw/debug/tb_wb_debug.vhd",
@@ -72,7 +100,7 @@ QUARTUS_EXCLUDED = [
     "hw/gpu/sim_vga.vhd",
     "hw/gpu/sim_sram.vhd",
 ]
-QUARTUS_SOURCES = [x for x in VHDL_SOURCES if x not in QUARTUS_EXCLUDED]
+QUARTUS_SOURCES = [x for x in VHDL_FILE_TREE.keys() if x not in QUARTUS_EXCLUDED]
 SBY_FILES = ["hw/mem/wb_sram.sby"]
 
 
@@ -197,7 +225,7 @@ def build_task_graph():
     rule(
         "build/j63_nvc/meta-analyzed",
         nvc_analyze,
-        VHDL_SOURCES + ["build/j63_nvc/meta-quartus"],
+        list(VHDL_FILE_TREE.keys()) + ["build/j63_nvc/meta-quartus"],
     )
     rule("build/j63_nvc", mkdir, [])
 
@@ -231,7 +259,9 @@ def build_task_graph():
         run_args=[],
     )
 
-    for source in PYTHON_SOURCES + QUARTUS_PROJECT_FILES + VHDL_SOURCES + SBY_FILES:
+    for source in (
+        PYTHON_SOURCES + QUARTUS_PROJECT_FILES + list(VHDL_FILE_TREE.keys()) + SBY_FILES
+    ):
         rule(source, file_exists, [])
 
     return Tasks(dependencies=dependencies, builders=builders)
@@ -338,7 +368,7 @@ def task_up_to_date(task, dependencies):
 
 
 def write_vhdl_ls():
-    config = {"libraries": {"j63": {"files": VHDL_SOURCES}}}
+    config = {"libraries": {"j63": {"files": list(VHDL_FILE_TREE.keys())}}}
     pathlib.Path("vhdl_ls.toml").write_text(tomli_w.dumps(config))
 
 
