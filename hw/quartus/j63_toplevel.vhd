@@ -1,6 +1,8 @@
 library ieee;
   use ieee.std_logic_1164.all;
 
+  use work.wb_pkg.all;
+
 entity j63_toplevel is
   port (
     clock_50_i  : in    std_logic;
@@ -166,16 +168,8 @@ architecture rtl of j63_toplevel is
   signal sram_data_wr : std_logic_vector(15 downto 0);
   signal sram_data_rd : std_logic_vector(15 downto 0);
 
-  signal vram_wb_cyc    : std_logic;
-  signal vram_wb_dat    : std_logic_vector(15 downto 0);
-  signal vram_wb_dat_rd : std_logic_vector(15 downto 0);
-  signal vram_wb_dat_wr : std_logic_vector(15 downto 0);
-  signal vram_wb_ack    : std_logic;
-  signal vram_wb_addr   : std_logic_vector(19 downto 0);
-  signal vram_wb_stall  : std_logic;
-  signal vram_wb_sel    : std_logic_vector(1 downto 0);
-  signal vram_wb_stb    : std_logic;
-  signal vram_wb_we     : std_logic;
+  signal vram_wb_controller : wb_controller_t;
+  signal vram_wb_target     : wb_target_t;
 
   signal debug_wb_cyc    : std_logic;
   signal debug_wb_dat    : std_logic_vector(15 downto 0);
@@ -258,15 +252,8 @@ begin
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      wb_cyc_i   => vram_wb_cyc,
-      wb_dat_i   => vram_wb_dat_wr,
-      wb_dat_o   => vram_wb_dat_rd,
-      wb_ack_o   => vram_wb_ack,
-      wb_addr_i  => vram_wb_addr,
-      wb_stall_o => vram_wb_stall,
-      wb_sel_i   => vram_wb_sel,
-      wb_stb_i   => vram_wb_stb,
-      wb_we_i    => vram_wb_we,
+      wb_controller_i => vram_wb_controller,
+      wb_target_o     => vram_wb_target,
 
       sram_addr_o => sram_addr_o,
       sram_dat_o  => sram_data_wr,
@@ -313,15 +300,15 @@ begin
       b_wb_stb_i   => debug_wb_stb,
       b_wb_we_i    => debug_wb_we,
 
-      target_wb_cyc_o   => vram_wb_cyc,
-      target_wb_dat_i   => vram_wb_dat_rd,
-      target_wb_dat_o   => vram_wb_dat_wr,
-      target_wb_ack_i   => vram_wb_ack,
-      target_wb_addr_o  => vram_wb_addr,
-      target_wb_stall_i => vram_wb_stall,
-      target_wb_sel_o   => vram_wb_sel,
-      target_wb_stb_o   => vram_wb_stb,
-      target_wb_we_o    => vram_wb_we
+      target_wb_cyc_o   => vram_wb_controller.cyc,
+      target_wb_dat_i   => vram_wb_target.dat,
+      target_wb_dat_o   => vram_wb_controller.dat,
+      target_wb_ack_i   => vram_wb_target.ack,
+      target_wb_addr_o  => vram_wb_controller.addr,
+      target_wb_stall_i => vram_wb_target.stall,
+      target_wb_sel_o   => vram_wb_controller.sel,
+      target_wb_stb_o   => vram_wb_controller.stb,
+      target_wb_we_o    => vram_wb_controller.we
     );
 
   u_reset_gen : entity work.reset_gen

@@ -4,6 +4,7 @@ library std;
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
+  use work.wb_pkg.all;
 
 entity tb_gpu is
 end entity tb_gpu;
@@ -32,16 +33,16 @@ architecture behave of tb_gpu is
   signal sram_data_rd : std_logic_vector(15 downto 0);
   signal sram_we      : std_logic;
 
-  signal vram_wb_cyc    : std_logic;
-  signal vram_wb_dat    : std_logic_vector(15 downto 0);
-  signal vram_wb_dat_rd : std_logic_vector(15 downto 0);
-  signal vram_wb_dat_wr : std_logic_vector(15 downto 0);
-  signal vram_wb_ack    : std_logic;
-  signal vram_wb_addr   : std_logic_vector(19 downto 0);
-  signal vram_wb_stall  : std_logic;
-  signal vram_wb_sel    : std_logic_vector(1 downto 0);
-  signal vram_wb_stb    : std_logic;
-  signal vram_wb_we     : std_logic;
+  signal vram_wb_controller : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal vram_wb_target     : wb_target_t
+         (
+          dat(15 downto 0)
+        );
 
   procedure vga_cycle (
     r : in std_logic_vector(7 downto 0);
@@ -88,15 +89,15 @@ begin
       vga_g_o      => vga_g,
       vga_b_o      => vga_b,
 
-      vram_wb_cyc_o   => vram_wb_cyc,
-      vram_wb_dat_i   => vram_wb_dat_rd,
-      vram_wb_dat_o   => vram_wb_dat_wr,
-      vram_wb_ack_i   => vram_wb_ack,
-      vram_wb_addr_o  => vram_wb_addr,
-      vram_wb_stall_i => vram_wb_stall,
-      vram_wb_sel_o   => vram_wb_sel,
-      vram_wb_stb_o   => vram_wb_stb,
-      vram_wb_we_o    => vram_wb_we
+      vram_wb_cyc_o   => vram_wb_controller.cyc,
+      vram_wb_dat_i   => vram_wb_target.dat,
+      vram_wb_dat_o   => vram_wb_controller.dat,
+      vram_wb_ack_i   => vram_wb_target.ack,
+      vram_wb_addr_o  => vram_wb_controller.addr,
+      vram_wb_stall_i => vram_wb_target.stall,
+      vram_wb_sel_o   => vram_wb_controller.sel,
+      vram_wb_stb_o   => vram_wb_controller.stb,
+      vram_wb_we_o    => vram_wb_controller.we
     );
 
   u_wb_vram : entity work.wb_sram
@@ -108,15 +109,8 @@ begin
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      wb_cyc_i   => vram_wb_cyc,
-      wb_dat_i   => vram_wb_dat_wr,
-      wb_dat_o   => vram_wb_dat_rd,
-      wb_ack_o   => vram_wb_ack,
-      wb_addr_i  => vram_wb_addr,
-      wb_stall_o => vram_wb_stall,
-      wb_sel_i   => vram_wb_sel,
-      wb_stb_i   => vram_wb_stb,
-      wb_we_i    => vram_wb_we,
+      wb_controller_i => vram_wb_controller,
+      wb_target_o     => vram_wb_target,
 
       sram_addr_o => sram_addr,
       sram_dat_o  => sram_data_wr,
