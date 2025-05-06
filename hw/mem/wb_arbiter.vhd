@@ -1,45 +1,20 @@
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
+  use work.wb_pkg.all;
 
 entity wb_arbiter is
-  generic (
-    addr_width : natural;
-    data_width : natural
-  );
   port (
     clk_i : in    std_logic;
     rst_i : in    std_logic;
 
-    a_wb_cyc_i   : in    std_logic;
-    a_wb_dat_i   : in    std_logic_vector(data_width - 1 downto 0);
-    a_wb_dat_o   : out   std_logic_vector(data_width - 1 downto 0);
-    a_wb_ack_o   : out   std_logic;
-    a_wb_addr_i  : in    std_logic_vector(addr_width - 1 downto 0);
-    a_wb_stall_o : out   std_logic;
-    a_wb_sel_i   : in    std_logic_vector((data_width / 8) - 1 downto 0);
-    a_wb_stb_i   : in    std_logic;
-    a_wb_we_i    : in    std_logic;
+    a_i : in    wb_controller_t;
+    a_o : out   wb_target_t;
+    b_i : in    wb_controller_t;
+    b_o : out   wb_target_t;
 
-    b_wb_cyc_i   : in    std_logic;
-    b_wb_dat_i   : in    std_logic_vector(data_width - 1 downto 0);
-    b_wb_dat_o   : out   std_logic_vector(data_width - 1 downto 0);
-    b_wb_ack_o   : out   std_logic;
-    b_wb_addr_i  : in    std_logic_vector(addr_width - 1 downto 0);
-    b_wb_stall_o : out   std_logic;
-    b_wb_sel_i   : in    std_logic_vector((data_width / 8) - 1 downto 0);
-    b_wb_stb_i   : in    std_logic;
-    b_wb_we_i    : in    std_logic;
-
-    target_wb_cyc_o   : out   std_logic;
-    target_wb_dat_i   : in    std_logic_vector(data_width - 1 downto 0);
-    target_wb_dat_o   : out   std_logic_vector(data_width - 1 downto 0);
-    target_wb_ack_i   : in    std_logic;
-    target_wb_addr_o  : out   std_logic_vector(addr_width - 1 downto 0);
-    target_wb_stall_i : in    std_logic;
-    target_wb_sel_o   : out   std_logic_vector((data_width / 8) - 1 downto 0);
-    target_wb_stb_o   : out   std_logic;
-    target_wb_we_o    : out   std_logic
+    target_o : out   wb_controller_t;
+    target_i : in    wb_target_t
   );
 end entity wb_arbiter;
 
@@ -47,6 +22,9 @@ architecture rtl of wb_arbiter is
 
   signal a_active   : std_logic;
   signal a_active_d : std_logic;
+
+  signal a_dat : std_logic_vector(a_o.dat'range);
+  signal b_dat : std_logic_vector(b_o.dat'range);
 
 begin
 
@@ -66,34 +44,26 @@ begin
   -- Controller A gets the bus under two circumstances:
   -- 1) It is the only one asking for it
   -- 2) It had it last cycle, and continues to ask for it
-  a_active <= '1' when (a_wb_cyc_i = '1' and b_wb_cyc_i = '0') or (a_active_d = '1' and a_wb_cyc_i = '1') else
+  a_active <= '1' when (a_i.cyc = '1' and b_i.cyc = '0') or (a_active_d = '1' and a_i.cyc = '1') else
               '0';
 
-  a_wb_dat_o   <= target_wb_dat_i when a_active = '1' else
-                  (others => '0');
-  a_wb_ack_o   <= target_wb_ack_i when a_active = '1' else
-                  '0';
-  a_wb_stall_o <= target_wb_stall_i when a_active = '1' else
-                  '1';
-  b_wb_dat_o   <= target_wb_dat_i when a_active = '0' else
-                  (others => '0');
-  b_wb_ack_o   <= target_wb_ack_i when a_active = '0' else
-                  '0';
-  b_wb_stall_o <= target_wb_stall_i when a_active = '0' else
-                  '1';
+  a_dat     <= target_i.dat when a_active = '1' else
+               (others => '0');
+  a_o.dat   <= a_dat;
+  a_o.ack   <= target_i.ack when a_active = '1' else
+               '0';
+  a_o.stall <= target_i.stall when a_active = '1' else
+               '1';
+  b_dat     <= target_i.dat when a_active = '0' else
+               (others => '0');
+  b_o.dat   <= b_dat;
+  b_o.ack   <= target_i.ack when a_active = '0' else
+               '0';
+  b_o.stall <= target_i.stall when a_active = '0' else
+               '1';
 
-  target_wb_cyc_o  <= a_wb_cyc_i when a_active = '1' else
-                      b_wb_cyc_i;
-  target_wb_dat_o  <= a_wb_dat_i when a_active = '1' else
-                      b_wb_dat_i;
-  target_wb_addr_o <= a_wb_addr_i when a_active = '1' else
-                      b_wb_addr_i;
-  target_wb_sel_o  <= a_wb_sel_i when a_active = '1' else
-                      b_wb_sel_i;
-  target_wb_stb_o  <= a_wb_stb_i when a_active = '1' else
-                      b_wb_stb_i;
-  target_wb_we_o   <= a_wb_we_i when a_active = '1' else
-                      b_wb_we_i;
+  target_o <= a_i when a_active = '1' else
+              b_i;
 
 end architecture rtl;
 

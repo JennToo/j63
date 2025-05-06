@@ -28,9 +28,11 @@ VHDL_FILE_TREE = {
     "hw/common/math_pkg.vhd": [],
     "hw/common/sync_bit.vhd": [],
     "hw/common/test_pkg.vhd": [],
+    "hw/mem/wb_pkg.vhd": [],
     "hw/debug/tb_wb_debug.vhd": [
         "hw/gpu/sim_sram.vhd",
         "hw/debug/wb_debug.vhd",
+        "hw/mem/wb_pkg.vhd",
         "hw/mem/wb_sram.vhd",
     ],
     "hw/debug/wb_debug.vhd": ["hw/common/math_pkg.vhd"],
@@ -57,11 +59,14 @@ VHDL_FILE_TREE = {
     "hw/gpu/vga.vhd": ["hw/gpu/gpu_pkg.vhd", "hw/common/math_pkg.vhd"],
     "hw/mem/wb_arbiter.vhd": [],
     "hw/mem/wb_dma_to_fifo.vhd": [],
-    "hw/mem/wb_sram.vhd": [],
+    "hw/mem/wb_sram.vhd": [
+        "hw/mem/wb_pkg.vhd",
+    ],
     "hw/quartus/j63_toplevel.vhd": [
         "hw/quartus/sys_pll.vhd",
         "hw/quartus/vga_pll.vhd",
         "hw/gpu/gpu.vhd",
+        "hw/mem/wb_pkg.vhd",
         "hw/mem/wb_sram.vhd",
         "hw/mem/wb_arbiter.vhd",
         "hw/sys/reset_gen.vhd",

@@ -1,5 +1,6 @@
 library ieee;
   use ieee.std_logic_1164.all;
+  use work.wb_pkg.all;
 
 entity j63_toplevel is
   port (
@@ -184,38 +185,36 @@ architecture rtl of j63_toplevel is
   signal sram_data_wr : std_logic_vector(15 downto 0);
   signal sram_data_rd : std_logic_vector(15 downto 0);
 
-  signal vram_wb_cyc    : std_logic;
-  signal vram_wb_dat    : std_logic_vector(15 downto 0);
-  signal vram_wb_dat_rd : std_logic_vector(15 downto 0);
-  signal vram_wb_dat_wr : std_logic_vector(15 downto 0);
-  signal vram_wb_ack    : std_logic;
-  signal vram_wb_addr   : std_logic_vector(19 downto 0);
-  signal vram_wb_stall  : std_logic;
-  signal vram_wb_sel    : std_logic_vector(1 downto 0);
-  signal vram_wb_stb    : std_logic;
-  signal vram_wb_we     : std_logic;
-
-  signal debug_wb_cyc    : std_logic;
-  signal debug_wb_dat    : std_logic_vector(15 downto 0);
-  signal debug_wb_dat_rd : std_logic_vector(15 downto 0);
-  signal debug_wb_dat_wr : std_logic_vector(15 downto 0);
-  signal debug_wb_ack    : std_logic;
-  signal debug_wb_addr   : std_logic_vector(19 downto 0);
-  signal debug_wb_stall  : std_logic;
-  signal debug_wb_sel    : std_logic_vector(1 downto 0);
-  signal debug_wb_stb    : std_logic;
-  signal debug_wb_we     : std_logic;
-
-  signal gpu_vram_wb_cyc    : std_logic;
-  signal gpu_vram_wb_dat    : std_logic_vector(15 downto 0);
-  signal gpu_vram_wb_dat_rd : std_logic_vector(15 downto 0);
-  signal gpu_vram_wb_dat_wr : std_logic_vector(15 downto 0);
-  signal gpu_vram_wb_ack    : std_logic;
-  signal gpu_vram_wb_addr   : std_logic_vector(19 downto 0);
-  signal gpu_vram_wb_stall  : std_logic;
-  signal gpu_vram_wb_sel    : std_logic_vector(1 downto 0);
-  signal gpu_vram_wb_stb    : std_logic;
-  signal gpu_vram_wb_we     : std_logic;
+  signal vram_wb_controller     : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal vram_wb_target         : wb_target_t
+         (
+          dat(15 downto 0)
+        );
+  signal debug_wb_controller    : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal debug_wb_target        : wb_target_t
+         (
+          dat(15 downto 0)
+        );
+  signal gpu_vram_wb_controller : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal gpu_vram_wb_target     : wb_target_t
+         (
+          dat(15 downto 0)
+        );
 
 begin
 
@@ -256,15 +255,8 @@ begin
       vga_g_o      => vga_g_o,
       vga_b_o      => vga_b_o,
 
-      vram_wb_cyc_o   => gpu_vram_wb_cyc,
-      vram_wb_dat_i   => gpu_vram_wb_dat_rd,
-      vram_wb_dat_o   => gpu_vram_wb_dat_wr,
-      vram_wb_ack_i   => gpu_vram_wb_ack,
-      vram_wb_addr_o  => gpu_vram_wb_addr,
-      vram_wb_stall_i => gpu_vram_wb_stall,
-      vram_wb_sel_o   => gpu_vram_wb_sel,
-      vram_wb_stb_o   => gpu_vram_wb_stb,
-      vram_wb_we_o    => gpu_vram_wb_we
+      vram_wb_controller_o => gpu_vram_wb_controller,
+      vram_wb_target_i     => gpu_vram_wb_target
     );
 
   u_wb_vram : entity work.wb_sram
@@ -276,15 +268,8 @@ begin
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      wb_cyc_i   => vram_wb_cyc,
-      wb_dat_i   => vram_wb_dat_wr,
-      wb_dat_o   => vram_wb_dat_rd,
-      wb_ack_o   => vram_wb_ack,
-      wb_addr_i  => vram_wb_addr,
-      wb_stall_o => vram_wb_stall,
-      wb_sel_i   => vram_wb_sel,
-      wb_stb_i   => vram_wb_stb,
-      wb_we_i    => vram_wb_we,
+      wb_controller_i => vram_wb_controller,
+      wb_target_o     => vram_wb_target,
 
       sram_addr_o => sram_addr_o,
       sram_dat_o  => sram_data_wr,
@@ -303,43 +288,18 @@ begin
   sram_oe_no   <= '0';
 
   u_vram_debug_arbiter : entity work.wb_arbiter
-    generic map (
-      addr_width => 20,
-      data_width => 16
-    )
     port map (
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      a_wb_cyc_i   => gpu_vram_wb_cyc,
-      a_wb_dat_i   => gpu_vram_wb_dat_wr,
-      a_wb_dat_o   => gpu_vram_wb_dat_rd,
-      a_wb_ack_o   => gpu_vram_wb_ack,
-      a_wb_addr_i  => gpu_vram_wb_addr,
-      a_wb_stall_o => gpu_vram_wb_stall,
-      a_wb_sel_i   => gpu_vram_wb_sel,
-      a_wb_stb_i   => gpu_vram_wb_stb,
-      a_wb_we_i    => gpu_vram_wb_we,
+      a_i => gpu_vram_wb_controller,
+      a_o => gpu_vram_wb_target,
 
-      b_wb_cyc_i   => debug_wb_cyc,
-      b_wb_dat_i   => debug_wb_dat_wr,
-      b_wb_dat_o   => debug_wb_dat_rd,
-      b_wb_ack_o   => debug_wb_ack,
-      b_wb_addr_i  => debug_wb_addr,
-      b_wb_stall_o => debug_wb_stall,
-      b_wb_sel_i   => debug_wb_sel,
-      b_wb_stb_i   => debug_wb_stb,
-      b_wb_we_i    => debug_wb_we,
+      b_i => debug_wb_controller,
+      b_o => debug_wb_target,
 
-      target_wb_cyc_o   => vram_wb_cyc,
-      target_wb_dat_i   => vram_wb_dat_rd,
-      target_wb_dat_o   => vram_wb_dat_wr,
-      target_wb_ack_i   => vram_wb_ack,
-      target_wb_addr_o  => vram_wb_addr,
-      target_wb_stall_i => vram_wb_stall,
-      target_wb_sel_o   => vram_wb_sel,
-      target_wb_stb_o   => vram_wb_stb,
-      target_wb_we_o    => vram_wb_we
+      target_o => vram_wb_controller,
+      target_i => vram_wb_target
     );
 
   u_reset_gen : entity work.reset_gen
@@ -354,23 +314,14 @@ begin
   u_debug : entity work.wb_debug_uart
     generic map (
       clk_period  => 10 ns,
-      baud_period => 4340 ns,
-      addr_width  => 20,
-      data_width  => 16
+      baud_period => 4340 ns
     )
     port map (
       clk_i => clk_sys,
       rst_i => rst_sys,
 
-      wb_cyc_o   => debug_wb_cyc,
-      wb_dat_i   => debug_wb_dat_rd,
-      wb_dat_o   => debug_wb_dat_wr,
-      wb_ack_i   => debug_wb_ack,
-      wb_addr_o  => debug_wb_addr,
-      wb_stall_i => debug_wb_stall,
-      wb_sel_o   => debug_wb_sel,
-      wb_stb_o   => debug_wb_stb,
-      wb_we_o    => debug_wb_we,
+      wb_controller_o => debug_wb_controller,
+      wb_target_i     => debug_wb_target,
 
       uart_rxd_i => uart_rxd_sync,
       uart_txd_o => uart_txd_o

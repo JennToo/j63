@@ -4,6 +4,7 @@ library std;
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
+  use work.wb_pkg.all;
 
 entity tb_wb_debug is
 end entity tb_wb_debug;
@@ -17,15 +18,16 @@ architecture behave of tb_wb_debug is
   signal clk : std_logic := '0';
   signal rst : std_logic := '1';
 
-  signal wb_cyc    : std_logic;
-  signal wb_dat_rd : std_logic_vector(15 downto 0);
-  signal wb_dat_wr : std_logic_vector(15 downto 0);
-  signal wb_ack    : std_logic;
-  signal wb_addr   : std_logic_vector(19 downto 0);
-  signal wb_stall  : std_logic;
-  signal wb_sel    : std_logic_vector(1 downto 0);
-  signal wb_stb    : std_logic;
-  signal wb_we     : std_logic;
+  signal wb_controller : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal wb_target     : wb_target_t
+         (
+          dat(15 downto 0)
+        );
 
   signal sram_addr    : std_logic_vector(19 downto 0);
   signal sram_data_wr : std_logic_vector(15 downto 0);
@@ -45,23 +47,12 @@ begin
   clk <= not clk after clk_period / 2;
 
   u_wb_debug : entity work.wb_debug
-    generic map (
-      addr_width => 20,
-      data_width => 16
-    )
     port map (
       clk_i => clk,
       rst_i => rst,
 
-      wb_cyc_o   => wb_cyc,
-      wb_dat_i   => wb_dat_rd,
-      wb_dat_o   => wb_dat_wr,
-      wb_ack_i   => wb_ack,
-      wb_addr_o  => wb_addr,
-      wb_stall_i => wb_stall,
-      wb_sel_o   => wb_sel,
-      wb_stb_o   => wb_stb,
-      wb_we_o    => wb_we,
+      wb_controller_o => wb_controller,
+      wb_target_i     => wb_target,
 
       cmd_i          => cmd,
       cmd_valid_i    => cmd_valid,
@@ -90,15 +81,8 @@ begin
       clk_i => clk,
       rst_i => rst,
 
-      wb_cyc_i   => wb_cyc,
-      wb_dat_i   => wb_dat_wr,
-      wb_dat_o   => wb_dat_rd,
-      wb_ack_o   => wb_ack,
-      wb_addr_i  => wb_addr,
-      wb_stall_o => wb_stall,
-      wb_sel_i   => wb_sel,
-      wb_stb_i   => wb_stb,
-      wb_we_i    => wb_we,
+      wb_controller_i => wb_controller,
+      wb_target_o     => wb_target,
 
       sram_addr_o => sram_addr,
       sram_dat_o  => sram_data_wr,
