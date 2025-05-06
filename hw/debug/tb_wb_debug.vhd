@@ -47,23 +47,12 @@ begin
   clk <= not clk after clk_period / 2;
 
   u_wb_debug : entity work.wb_debug
-    generic map (
-      addr_width => 20,
-      data_width => 16
-    )
     port map (
       clk_i => clk,
       rst_i => rst,
 
-      wb_cyc_o   => wb_cyc,
-      wb_dat_i   => wb_dat_rd,
-      wb_dat_o   => wb_dat_wr,
-      wb_ack_i   => wb_ack,
-      wb_addr_o  => wb_addr,
-      wb_stall_i => wb_stall,
-      wb_sel_o   => wb_sel,
-      wb_stb_o   => wb_stb,
-      wb_we_o    => wb_we,
+      wb_controller_o => wb_controller,
+      wb_target_i     => wb_target,
 
       cmd_i          => cmd,
       cmd_valid_i    => cmd_valid,
@@ -92,15 +81,8 @@ begin
       clk_i => clk,
       rst_i => rst,
 
-      wb_cyc_i   => wb_cyc,
-      wb_dat_i   => wb_dat_wr,
-      wb_dat_o   => wb_dat_rd,
-      wb_ack_o   => wb_ack,
-      wb_addr_i  => wb_addr,
-      wb_stall_o => wb_stall,
-      wb_sel_i   => wb_sel,
-      wb_stb_i   => wb_stb,
-      wb_we_i    => wb_we,
+      wb_controller_i => wb_controller,
+      wb_target_o     => wb_target,
 
       sram_addr_o => sram_addr,
       sram_dat_o  => sram_data_wr,

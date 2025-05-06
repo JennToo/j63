@@ -2,6 +2,7 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
   use work.gpu_pkg.all;
+  use work.wb_pkg.all;
 
 entity gpu is
   port (
@@ -18,15 +19,8 @@ entity gpu is
     vga_g_o      : out   std_logic_vector(7 downto 0);
     vga_b_o      : out   std_logic_vector(7 downto 0);
 
-    vram_wb_cyc_o   : out   std_logic;
-    vram_wb_dat_i   : in    std_logic_vector(15 downto 0);
-    vram_wb_dat_o   : out   std_logic_vector(15 downto 0);
-    vram_wb_ack_i   : in    std_logic;
-    vram_wb_addr_o  : out   std_logic_vector(19 downto 0);
-    vram_wb_stall_i : in    std_logic;
-    vram_wb_sel_o   : out   std_logic_vector(1 downto 0);
-    vram_wb_stb_o   : out   std_logic;
-    vram_wb_we_o    : out   std_logic
+    vram_wb_controller_o : out   wb_controller_t;
+    vram_wb_target_i     : in    wb_target_t
   );
 end entity gpu;
 
@@ -63,15 +57,16 @@ architecture rtl of gpu is
   signal fb_cursor_y          : unsigned(fb_height_log2 - 1 downto 0);
   signal sys_pixel_doubler    : std_logic;
 
-  signal fifo_dma_wb_cyc    : std_logic;
-  signal fifo_dma_wb_dat_rd : std_logic_vector(15 downto 0);
-  signal fifo_dma_wb_dat_wr : std_logic_vector(15 downto 0);
-  signal fifo_dma_wb_ack    : std_logic;
-  signal fifo_dma_wb_addr   : std_logic_vector(19 downto 0);
-  signal fifo_dma_wb_stall  : std_logic;
-  signal fifo_dma_wb_sel    : std_logic_vector(1 downto 0);
-  signal fifo_dma_wb_stb    : std_logic;
-  signal fifo_dma_wb_we     : std_logic;
+  signal fifo_dma_wb_controller : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal fifo_dma_wb_target     : wb_target_t
+         (
+          dat(15 downto 0)
+        );
 
   signal fifo_dma_addr     : unsigned(19 downto 0);
   signal fifo_dma_word_cnt : std_logic_vector(19 downto 0);
@@ -101,45 +96,8 @@ begin
   fb_back_addr_base  <= fb_frame_addr_1 when active_frame = '0' else
                         fb_frame_addr_0;
 
-  u_vram_arbiter : entity work.wb_arbiter
-    generic map (
-      addr_width => 20,
-      data_width => 16
-    )
-    port map (
-      clk_i => clk_sys_i,
-      rst_i => rst_sys_i,
-
-      a_wb_cyc_i   => fifo_dma_wb_cyc,
-      a_wb_dat_i   => fifo_dma_wb_dat_wr,
-      a_wb_dat_o   => fifo_dma_wb_dat_rd,
-      a_wb_ack_o   => fifo_dma_wb_ack,
-      a_wb_addr_i  => fifo_dma_wb_addr,
-      a_wb_stall_o => fifo_dma_wb_stall,
-      a_wb_sel_i   => fifo_dma_wb_sel,
-      a_wb_stb_i   => fifo_dma_wb_stb,
-      a_wb_we_i    => fifo_dma_wb_we,
-
-      b_wb_cyc_i   => '0',
-      b_wb_dat_i   => (others => '0'),
-      b_wb_dat_o   => open,
-      b_wb_ack_o   => open,
-      b_wb_addr_i  => (others => '0'),
-      b_wb_stall_o => open,
-      b_wb_sel_i   => (others => '0'),
-      b_wb_stb_i   => '0',
-      b_wb_we_i    => '0',
-
-      target_wb_cyc_o   => vram_wb_cyc_o,
-      target_wb_dat_i   => vram_wb_dat_i,
-      target_wb_dat_o   => vram_wb_dat_o,
-      target_wb_ack_i   => vram_wb_ack_i,
-      target_wb_addr_o  => vram_wb_addr_o,
-      target_wb_stall_i => vram_wb_stall_i,
-      target_wb_sel_o   => vram_wb_sel_o,
-      target_wb_stb_o   => vram_wb_stb_o,
-      target_wb_we_o    => vram_wb_we_o
-    );
+  fifo_dma_wb_target   <= vram_wb_target_i;
+  vram_wb_controller_o <= fifo_dma_wb_controller;
 
   u_vga_fifo : component vga_fb_fifo
     port map (
@@ -174,15 +132,8 @@ begin
       dma_start_i    => fifo_dma_start,
       dma_done_o     => fifo_dma_done,
 
-      wb_cyc_o   => fifo_dma_wb_cyc,
-      wb_dat_i   => fifo_dma_wb_dat_rd,
-      wb_dat_o   => fifo_dma_wb_dat_wr,
-      wb_ack_i   => fifo_dma_wb_ack,
-      wb_addr_o  => fifo_dma_wb_addr,
-      wb_stall_i => fifo_dma_wb_stall,
-      wb_sel_o   => fifo_dma_wb_sel,
-      wb_stb_o   => fifo_dma_wb_stb,
-      wb_we_o    => fifo_dma_wb_we,
+      wb_controller_o => fifo_dma_wb_controller,
+      wb_target_i     => fifo_dma_wb_target,
 
       fifo_cnt_i  => fifo_write_count,
       fifo_data_o => fifo_data_in(15 downto 0),

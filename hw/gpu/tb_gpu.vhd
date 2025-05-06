@@ -89,15 +89,8 @@ begin
       vga_g_o      => vga_g,
       vga_b_o      => vga_b,
 
-      vram_wb_cyc_o   => vram_wb_controller.cyc,
-      vram_wb_dat_i   => vram_wb_target.dat,
-      vram_wb_dat_o   => vram_wb_controller.dat,
-      vram_wb_ack_i   => vram_wb_target.ack,
-      vram_wb_addr_o  => vram_wb_controller.addr,
-      vram_wb_stall_i => vram_wb_target.stall,
-      vram_wb_sel_o   => vram_wb_controller.sel,
-      vram_wb_stb_o   => vram_wb_controller.stb,
-      vram_wb_we_o    => vram_wb_controller.we
+      vram_wb_controller_o => vram_wb_controller,
+      vram_wb_target_i     => vram_wb_target
     );
 
   u_wb_vram : entity work.wb_sram

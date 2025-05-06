@@ -2,25 +2,15 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
   use work.math_pkg.all;
+  use work.wb_pkg.all;
 
 entity wb_debug is
-  generic (
-    addr_width : natural;
-    data_width : natural
-  );
   port (
     clk_i : in    std_logic;
     rst_i : in    std_logic;
 
-    wb_cyc_o   : out   std_logic;
-    wb_dat_i   : in    std_logic_vector(data_width - 1 downto 0);
-    wb_dat_o   : out   std_logic_vector(data_width - 1 downto 0);
-    wb_ack_i   : in    std_logic;
-    wb_addr_o  : out   std_logic_vector(addr_width - 1 downto 0);
-    wb_stall_i : in    std_logic;
-    wb_sel_o   : out   std_logic_vector((data_width / 8) - 1 downto 0);
-    wb_stb_o   : out   std_logic;
-    wb_we_o    : out   std_logic;
+    wb_controller_o : out   wb_controller_t;
+    wb_target_i     : in    wb_target_t;
 
     cmd_i          : in    std_logic_vector(7 downto 0);
     cmd_valid_i    : in    std_logic;
@@ -57,11 +47,13 @@ architecture rtl of wb_debug is
   signal state        : state_t;
 
   signal cmd_byte_sel : std_logic_vector(3 downto 0);
+  signal sel          : std_logic_vector(wb_controller_o.sel'range);
 
 begin
 
-  wb_dat_o  <= data(data_width - 1 downto 0);
-  wb_addr_o <= address(addr_width - 1 downto 0);
+  wb_controller_o.dat  <= data(wb_controller_o.dat'range);
+  wb_controller_o.addr <= address(wb_controller_o.addr'range);
+  wb_controller_o.sel  <= sel;
 
   cmd_byte_sel <= cmd_i(byte_sel_hi downto byte_sel_lo);
 
@@ -83,10 +75,10 @@ begin
         data_o       <= (others => '0');
         data_valid_o <= '0';
 
-        wb_cyc_o <= '0';
-        wb_stb_o <= '0';
-        wb_we_o  <= '0';
-        wb_sel_o <= (others => '0');
+        wb_controller_o.cyc <= '0';
+        wb_controller_o.stb <= '0';
+        wb_controller_o.we  <= '0';
+        sel                 <= (others => '0');
       else
 
         case (state) is
@@ -121,12 +113,12 @@ begin
 
                 when op_execute =>
 
-                  wb_cyc_o   <= '1';
-                  wb_stb_o   <= '1';
-                  wb_we_o    <= cmd_i(w1_r0);
-                  wb_sel_o   <= cmd_byte_sel((data_width / 8) - 1 downto 0);
-                  active_cmd <= cmd_i;
-                  if (wb_stall_i = '1') then
+                  wb_controller_o.cyc <= '1';
+                  wb_controller_o.stb <= '1';
+                  wb_controller_o.we  <= cmd_i(w1_r0);
+                  sel                 <= cmd_byte_sel(wb_controller_o.sel'range);
+                  active_cmd          <= cmd_i;
+                  if (wb_target_i.stall = '1') then
                     state <= state_execute_start;
                   else
                     state <= state_execute_wait;
@@ -173,7 +165,7 @@ begin
 
           when state_execute_start =>
 
-            if (wb_stall_i = '0') then
+            if (wb_target_i.stall = '0') then
               state <= state_execute_wait;
             end if;
 
@@ -182,12 +174,12 @@ begin
             -- TODO: Maybe this should generate an ACK of some kind on the
             --       debug bus. That would allow the debug controller to wait between
             --       commands, since it would know when the execute command is done.
-            if (wb_ack_i = '1') then
-              wb_cyc_o <= '0';
-              wb_stb_o <= '0';
-              state    <= state_idle;
+            if (wb_target_i.ack = '1') then
+              wb_controller_o.cyc <= '0';
+              wb_controller_o.stb <= '0';
+              state               <= state_idle;
               if (active_cmd(w1_r0) = '0') then
-                data <= std_logic_vector(resize(unsigned(wb_dat_i), 32));
+                data <= std_logic_vector(resize(unsigned(wb_target_i.dat), 32));
               end if;
               if (active_cmd(auto_inc_a) = '1') then
                 address <= std_logic_vector(unsigned(address) + 1);
@@ -202,4 +194,3 @@ begin
   end process cmd_p;
 
 end architecture rtl;
-
