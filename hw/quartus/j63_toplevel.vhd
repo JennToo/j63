@@ -151,6 +151,24 @@ end entity j63_toplevel;
 
 architecture rtl of j63_toplevel is
 
+  --vhdl_comp_off
+  component sys_pll is
+    port (
+      inclk0 : in    std_logic  := '0';
+      c0     : out   std_logic;
+      locked : out   std_logic
+    );
+  end component sys_pll;
+
+  component vga_pll is
+    port (
+      inclk0 : in    std_logic  := '0';
+      c0     : out   std_logic;
+      locked : out   std_logic
+    );
+  end component vga_pll;
+  --vhdl_comp_on
+
   signal clk_sys  : std_logic;
   signal rst_sys  : std_logic;
   signal clk_vga  : std_logic;
@@ -203,14 +221,14 @@ begin
 
   -- The system clock (100 MHz) is too dissimilar to the VGA clock (25.175 MHz)
   -- to use the same PLL. The SRAM on the DE2 board is rated for 100 MHz operation
-  u_sys_pll : entity work.sys_pll
+  u_sys_pll : component sys_pll
     port map (
       inclk0 => clock_50_i,
       c0     => clk_sys,
       locked => open
     );
 
-  u_vga_pll : entity work.vga_pll
+  u_vga_pll : component vga_pll
     port map (
       inclk0 => clock_50_i,
       c0     => clk_vga,

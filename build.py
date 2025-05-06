@@ -42,7 +42,6 @@ VHDL_FILE_TREE = {
     "hw/gpu/gpu.vhd": [
         "hw/gpu/gpu_pkg.vhd",
         "hw/mem/wb_arbiter.vhd",
-        "hw/quartus/vga_fb_fifo.vhd",
         "hw/mem/wb_dma_to_fifo.vhd",
         "hw/gpu/vga.vhd",
     ],
@@ -92,6 +91,7 @@ VSG_EXCLUDED = [
     "hw/quartus/vga_pll.vhd",
     "hw/quartus/vga_fb_fifo.vhd",
 ]
+GHDL_EXCLUDED = VSG_EXCLUDED
 VSG_SOURCES = [x for x in VHDL_FILE_TREE.keys() if x not in VSG_EXCLUDED]
 QUARTUS_EXCLUDED = [
     "hw/serial/tb_uart_rx.vhd",
@@ -429,10 +429,23 @@ def build_quartus_project(task, dependencies, **kwargs):
         elif dep.endswith(".qpf"):
             qpf_file = pathlib.Path(dep)
 
+    vhdl_files = [x for x in src_files if x.suffix == ".vhd"]
+    vhdl_files = [x for x in vhdl_files if str(x) not in GHDL_EXCLUDED]
+    src_files = [x for x in src_files if x not in vhdl_files]
+    vhdl_to_verilog(
+        top_level="j63_toplevel",
+        output_file=f"{build_dir}/j63_toplevel.v",
+        input_files=[str(x) for x in vhdl_files],
+        **kwargs,
+    )
+    src_files.append(build_dir / "j63_toplevel.v")
+
     qsf_contents = qsf_file.read_text()
     for src_file in src_files:
         if src_file.suffix == ".vhd":
             type_ = "VHDL_FILE"
+        elif src_file.suffix == ".v":
+            type_ = "VERILOG_FILE"
         elif src_file.suffix == ".sdc":
             type_ = "SDC_FILE"
         elif src_file.suffix == ".qip":
@@ -484,6 +497,18 @@ def build_quartus_project(task, dependencies, **kwargs):
     run([f"{quartus}/bin/quartus_sta", project, "-c", project], cwd=build_dir)
 
     touch(task)
+
+
+def vhdl_to_verilog(top_level, output_file, input_files, **kwargs):
+    oss_cad_run(
+        [
+            "yosys",
+            "-m",
+            "ghdl",
+            "-p",
+            f"ghdl --std=08 {' '.join(input_files)} -e {top_level}; check; opt; write_verilog {output_file}",
+        ]
+    )
 
 
 def sby_run(sby_file, prefix, task, **kwargs):
