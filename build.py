@@ -32,6 +32,7 @@ VHDL_FILE_TREE = {
     "hw/debug/tb_wb_debug.vhd": [
         "hw/gpu/sim_sram.vhd",
         "hw/debug/wb_debug.vhd",
+        "hw/mem/wb_pkg.vhd",
         "hw/mem/wb_sram.vhd",
     ],
     "hw/debug/wb_debug.vhd": ["hw/common/math_pkg.vhd"],

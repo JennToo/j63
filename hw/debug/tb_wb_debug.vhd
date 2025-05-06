@@ -4,6 +4,7 @@ library std;
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
+  use work.wb_pkg.all;
 
 entity tb_wb_debug is
 end entity tb_wb_debug;
@@ -17,15 +18,16 @@ architecture behave of tb_wb_debug is
   signal clk : std_logic := '0';
   signal rst : std_logic := '1';
 
-  signal wb_cyc    : std_logic;
-  signal wb_dat_rd : std_logic_vector(15 downto 0);
-  signal wb_dat_wr : std_logic_vector(15 downto 0);
-  signal wb_ack    : std_logic;
-  signal wb_addr   : std_logic_vector(19 downto 0);
-  signal wb_stall  : std_logic;
-  signal wb_sel    : std_logic_vector(1 downto 0);
-  signal wb_stb    : std_logic;
-  signal wb_we     : std_logic;
+  signal wb_controller : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal wb_target     : wb_target_t
+         (
+          dat(15 downto 0)
+        );
 
   signal sram_addr    : std_logic_vector(19 downto 0);
   signal sram_data_wr : std_logic_vector(15 downto 0);

@@ -1,6 +1,5 @@
 library ieee;
   use ieee.std_logic_1164.all;
-
   use work.wb_pkg.all;
 
 entity j63_toplevel is
@@ -186,8 +185,16 @@ architecture rtl of j63_toplevel is
   signal sram_data_wr : std_logic_vector(15 downto 0);
   signal sram_data_rd : std_logic_vector(15 downto 0);
 
-  signal vram_wb_controller : wb_controller_t;
-  signal vram_wb_target     : wb_target_t;
+  signal vram_wb_controller : wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+  signal vram_wb_target     : wb_target_t
+         (
+          dat(15 downto 0)
+        );
 
   signal debug_wb_cyc    : std_logic;
   signal debug_wb_dat    : std_logic_vector(15 downto 0);
