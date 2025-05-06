@@ -1,7 +1,7 @@
 rule:
-  # Component declarations are very tedious
+  # Mostly using entity method, but component declarations are needed for IP
   instantiation_034:
-    method: entity
+    disable: true
 
   # Default assignments are very useful in simulation
   signal_007:

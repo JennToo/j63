@@ -32,6 +32,22 @@ end entity gpu;
 
 architecture rtl of gpu is
 
+  --vhdl_comp_off
+  component vga_fb_fifo is
+    port (
+      data    : in    std_logic_vector(17 downto 0);
+      rdclk   : in    std_logic;
+      rdreq   : in    std_logic;
+      wrclk   : in    std_logic;
+      wrreq   : in    std_logic;
+      q       : out   std_logic_vector(17 downto 0);
+      rdempty : out   std_logic;
+      wrfull  : out   std_logic;
+      wrusedw : out   std_logic_vector(7 downto 0)
+    );
+  end component vga_fb_fifo;
+  --vhdl_comp_on
+
   -- sys-clock side
   signal active_frame       : std_logic;
   signal fb_front_addr_base : unsigned(19 downto 0);
@@ -125,7 +141,7 @@ begin
       target_wb_we_o    => vram_wb_we_o
     );
 
-  u_vga_fifo : entity work.vga_fb_fifo
+  u_vga_fifo : component vga_fb_fifo
     port map (
       wrclk   => clk_sys_i,
       data    => fifo_data_in,
