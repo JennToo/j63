@@ -18,16 +18,8 @@ architecture behave of tb_wb_debug is
   signal clk : std_logic := '0';
   signal rst : std_logic := '1';
 
-  signal wb_controller : wb_controller_t
-         (
-          addr(19 downto 0),
-          dat(15 downto 0),
-          sel(1 downto 0)
-        );
-  signal wb_target     : wb_target_t
-         (
-          dat(15 downto 0)
-        );
+  signal wb_controller : wb_controller_a20d16_t;
+  signal wb_target     : wb_target_d16_t;
 
   signal sram_addr    : std_logic_vector(19 downto 0);
   signal sram_data_wr : std_logic_vector(15 downto 0);

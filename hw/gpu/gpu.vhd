@@ -57,16 +57,8 @@ architecture rtl of gpu is
   signal fb_cursor_y          : unsigned(fb_height_log2 - 1 downto 0);
   signal sys_pixel_doubler    : std_logic;
 
-  signal fifo_dma_wb_controller : wb_controller_t
-         (
-          addr(19 downto 0),
-          dat(15 downto 0),
-          sel(1 downto 0)
-        );
-  signal fifo_dma_wb_target     : wb_target_t
-         (
-          dat(15 downto 0)
-        );
+  signal fifo_dma_wb_controller : wb_controller_a20d16_t;
+  signal fifo_dma_wb_target     : wb_target_d16_t;
 
   signal fifo_dma_addr     : unsigned(19 downto 0);
   signal fifo_dma_word_cnt : std_logic_vector(19 downto 0);

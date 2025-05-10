@@ -18,4 +18,16 @@ package wb_pkg is
     stall : std_logic;
   end record wb_target_t;
 
+  subtype wb_controller_a20d16_t is wb_controller_t
+         (
+          addr(19 downto 0),
+          dat(15 downto 0),
+          sel(1 downto 0)
+        );
+
+  subtype wb_target_d16_t is wb_target_t
+         (
+          dat(15 downto 0)
+        );
+
 end package wb_pkg;
