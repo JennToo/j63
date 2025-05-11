@@ -83,4 +83,4 @@ derive_clock_uncertainty
 #**************************************************************
 
 
-
+set_false_path -to [get_registers {*|sync_bit:*|bit_delay}]

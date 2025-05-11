@@ -9,11 +9,15 @@ entity sync_bit is
     bit_i : in    std_logic;
     bit_o : out   std_logic
   );
+  attribute preserve          : boolean;
+  attribute preserve of bit_o : signal is true;
 end entity sync_bit;
 
 architecture rtl of sync_bit is
 
   signal bit_delay : std_logic;
+
+  attribute preserve of bit_delay : signal is true;
 
 begin
 
