@@ -16,19 +16,20 @@ end entity reset_gen;
 
 architecture rtl of reset_gen is
 
-  signal counter      : unsigned(3 downto 0) := "1111";
-  signal rst_sys_sync : std_logic;
+  signal counter        : unsigned(3 downto 0) := "1111";
+  signal rst_sys_sync   : std_logic;
+  signal rst_input_sync : std_logic;
 
 begin
 
   -- Done in VGA clock domain since it is the slowest
-  counter_p : process (clk_vga_i, async_rst_ni) is
+  counter_p : process (clk_vga_i) is
   begin
 
-    if (async_rst_ni = '0') then
-      counter <= "1111";
-    elsif rising_edge(clk_vga_i) then
-      if (counter /= 0) then
+    if rising_edge(clk_vga_i) then
+      if (rst_input_sync = '0') then
+        counter <= "1111";
+      elsif (counter /= 0) then
         counter <= counter - 1;
       end if;
     end if;
@@ -50,11 +51,21 @@ begin
 
   end process generator_p;
 
+  -- CDC from clk_vga into clk_sys
   u_sync_sys : entity work.sync_bit
     port map (
       clk_dest_i => clk_sys_i,
       bit_i      => rst_sys_sync,
       bit_o      => rst_sys_o
+    );
+
+  -- Improve metastability for the async input. Its probably fine without it,
+  -- but synchronizing it is cheap too
+  u_sync_input : entity work.sync_bit
+    port map (
+      clk_dest_i => clk_vga_i,
+      bit_i      => async_rst_ni,
+      bit_o      => rst_input_sync
     );
 
 end architecture rtl;

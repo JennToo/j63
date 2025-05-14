@@ -83,4 +83,12 @@ derive_clock_uncertainty
 #**************************************************************
 
 
+# CDC synchronizer bits
 set_false_path -to [get_registers {*|sync_bit:*|bit_delay}]
+
+# Fully async I/O
+set_false_path -from [get_ports {sw_i[*]}]
+set_false_path -from [get_ports {key_i[*]}]
+set_false_path -from [get_ports {uart_rxd_i}]
+
+set_false_path -to [get_ports {uart_txd_o}]
